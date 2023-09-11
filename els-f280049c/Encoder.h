@@ -23,12 +23,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #ifndef __ENCODER_H
 #define __ENCODER_H
 
-#include "F28x_Project.h"
 #include "Configuration.h"
+#include "F28x_Project.h"
 
 #ifdef ENCODER_USE_EQEP1
 #define ENCODER_REGS EQep1Regs
@@ -37,47 +36,34 @@
 #define ENCODER_REGS EQep2Regs
 #endif
 
-// define _ENCODER_MAX_COUNT as a multiple of ENCODER_RESOLUTION so that any modulo function overflows correctly
+// define _ENCODER_MAX_COUNT as a multiple of ENCODER_RESOLUTION so that any modulo function
+// overflows correctly
 #define _ENCODER_MAX_COUNT (ENCODER_RESOLUTION * 1024UL)
 
-class Encoder
-{
+class Encoder {
 private:
-    Uint32 previous;
-    Uint16 rpm;
-    Uint32 spindleAngle;
+  Uint32 previous;
+  Uint16 rpm;
+  Uint32 spindleAngle;
 
 public:
-    Encoder( void );
-    void initHardware( void );
+  Encoder(void);
+  void initHardware(void);
 
-    void reset( void );
+  void reset(void);
 
-    void setPosition(Uint32 newPos);
+  void setPosition(Uint32 newPos);
 
-    Uint16 getRPM( void );
-    Uint16 getSpindleAngle(void);
-    Uint32 getPosition( void );
-    Uint32 getMaxCount( void );
+  Uint16 getRPM(void);
+  Uint16 getSpindleAngle(void);
+  Uint32 getPosition(void);
+  Uint32 getMaxCount(void);
 };
 
+inline Uint32 Encoder::getPosition(void) { return ENCODER_REGS.QPOSCNT; }
 
-inline Uint32 Encoder :: getPosition(void)
-{
-    return ENCODER_REGS.QPOSCNT;
-}
+inline void Encoder::setPosition(Uint32 newPos) { ENCODER_REGS.QPOSCNT = newPos; }
 
-inline void Encoder :: setPosition(Uint32 newPos)
-{
-    ENCODER_REGS.QPOSCNT = newPos;
-}
+inline Uint32 Encoder::getMaxCount(void) { return _ENCODER_MAX_COUNT; }
 
-
-inline Uint32 Encoder :: getMaxCount(void)
-{
-    return _ENCODER_MAX_COUNT;
-}
-
-
-
-#endif // __ENCODER_H
+#endif   // __ENCODER_H

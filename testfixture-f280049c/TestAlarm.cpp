@@ -25,12 +25,12 @@
 
 #include "TestAlarm.h"
 
-TestAlarm :: TestAlarm( StepperDrive *stepperDrive )
+TestAlarm:: TestAlarm( StepperDrive *stepperDrive )
 {
     this->stepperDrive = stepperDrive;
 }
 
-void TestAlarm :: initHardware(void)
+void TestAlarm:: initHardware(void)
 {
     EALLOW;
     GpioCtrlRegs.GPBMUX1.bit.GPIO35 = 0;
@@ -40,7 +40,7 @@ void TestAlarm :: initHardware(void)
     EDIS;
 }
 
-void TestAlarm :: test(LED_REG *output)
+void TestAlarm:: test(LED_REG *output)
 {
     bool pass = true;
 

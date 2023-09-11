@@ -23,67 +23,58 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #ifndef __TABLES_H
 #define __TABLES_H
 
-#include "F28x_Project.h"
 #include "Configuration.h"
 #include "ControlPanel.h"
+#include "F28x_Project.h"
 
-
-
-typedef struct FEED_THREAD
-{
-    Uint16 display[4];
-    union LED_REG leds;
-    Uint64 numerator;
-    Uint64 denominator;
+typedef struct FEED_THREAD {
+  Uint16 display[4];
+  union LED_REG leds;
+  Uint64 numerator;
+  Uint64 denominator;
 } FEED_THREAD;
 
-
-
-class FeedTable
-{
+class FeedTable {
 private:
-    const FEED_THREAD *table;
-    Uint16 selectedRow;
-    Uint16 numRows;
+  const FEED_THREAD *table;
+  Uint16 selectedRow;
+  Uint16 numRows;
 
 public:
-    FeedTable(const FEED_THREAD *table, Uint16 numRows, Uint16 defaultSelection);
+  FeedTable(const FEED_THREAD *table, Uint16 numRows, Uint16 defaultSelection);
 
-    const FEED_THREAD *current(void);
-    const FEED_THREAD *next(void);
-    const FEED_THREAD *previous(void);
+  const FEED_THREAD *current(void);
+  const FEED_THREAD *next(void);
+  const FEED_THREAD *previous(void);
 };
 
-
-class FeedTableFactory
-{
+class FeedTableFactory {
 private:
-    FeedTable inchThreads;
-    FeedTable inchFeeds;
-    FeedTable metricThreads;
-    FeedTable metricFeeds;
+  FeedTable inchThreads;
+  FeedTable inchFeeds;
+  FeedTable metricThreads;
+  FeedTable metricFeeds;
 
-    void    setCustomPitch(Uint16 pitch);
-    Uint16  customPitch;
-    Uint16  cursorTimer;
+  void setCustomPitch(Uint16 pitch);
+  Uint16 customPitch;
+  Uint16 cursorTimer;
 
 public:
-    FeedTableFactory(void);
+  FeedTableFactory(void);
 
-    FeedTable *getFeedTable(bool metric, bool thread);
+  FeedTable *getFeedTable(bool metric, bool thread);
 
-    // custom feed 'stuff'
-    void flashCustomDigit( Uint16 digit );  // valid values for digit is: 1 (100's), 2 (10's) & 3 (units)
-    void flashCustomOff();
-    void incCustomDigit( Uint16 digit );
-    void decCustomDigit( Uint16 digit );
-    Uint16  valueToDigit(Uint16 value);
-    static bool    useCustomPitch;
+  // custom feed 'stuff'
+  void
+  flashCustomDigit(Uint16 digit);   // valid values for digit is: 1 (100's), 2 (10's) & 3 (units)
+  void flashCustomOff();
+  void incCustomDigit(Uint16 digit);
+  void decCustomDigit(Uint16 digit);
+  Uint16 valueToDigit(Uint16 value);
+  static bool useCustomPitch;
 };
 
-
-#endif // __TABLES_H
+#endif   // __TABLES_H

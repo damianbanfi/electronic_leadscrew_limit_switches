@@ -35,12 +35,12 @@
 // enough time for the CS line to rise and be deteted
 #define CS_RISE_TIME_US 5
 
-EEPROM :: EEPROM(SPIBus *spiBus)
+EEPROM:: EEPROM(SPIBus *spiBus)
 {
     this->spiBus = spiBus;
 }
 
-void EEPROM :: initHardware(void)
+void EEPROM:: initHardware(void)
 {
     EALLOW;
 
@@ -52,21 +52,21 @@ void EEPROM :: initHardware(void)
     EDIS;
 }
 
-void EEPROM :: configureSpiBus8Bit( void )
+void EEPROM:: configureSpiBus8Bit( void )
 {
     // configure the shared bus
     this->spiBus->setFourWire();
     this->spiBus->setEightBits();
 }
 
-void EEPROM :: configureSpiBus16Bit( void )
+void EEPROM:: configureSpiBus16Bit( void )
 {
     // configure the shared bus
     this->spiBus->setFourWire();
     this->spiBus->setSixteenBits();
 }
 
-Uint16 EEPROM :: readStatusRegister(void)
+Uint16 EEPROM:: readStatusRegister(void)
 {
     Uint16 command = 0b0000010100000000;
 
@@ -81,7 +81,7 @@ Uint16 EEPROM :: readStatusRegister(void)
     return status;
 }
 
-void EEPROM :: setWriteLatch(void)
+void EEPROM:: setWriteLatch(void)
 {
     Uint16 command = 0b0000011000000000;
 
@@ -94,12 +94,12 @@ void EEPROM :: setWriteLatch(void)
 
 }
 
-void EEPROM :: waitForWriteCycle(void)
+void EEPROM:: waitForWriteCycle(void)
 {
     while( readStatusRegister() & 0b0000000000000001 );
 }
 
-void EEPROM :: sendReadCommand(Uint16 blockNumber)
+void EEPROM:: sendReadCommand(Uint16 blockNumber)
 {
     Uint16 command = 0b0000001100000000;            // read
     Uint16 address = blockNumber << 4;
@@ -126,7 +126,7 @@ void EEPROM :: sendReadCommand(Uint16 blockNumber)
 #endif
 }
 
-void EEPROM :: sendWriteCommand(Uint16 blockNumber)
+void EEPROM:: sendWriteCommand(Uint16 blockNumber)
 {
     Uint16 command = 0b0000001000000000;            // write
     Uint16 address = blockNumber << 4;
@@ -153,7 +153,7 @@ void EEPROM :: sendWriteCommand(Uint16 blockNumber)
 #endif
 }
 
-void EEPROM :: receivePage(Uint16 pageSize, Uint16 *buffer)
+void EEPROM:: receivePage(Uint16 pageSize, Uint16 *buffer)
 {
     configureSpiBus16Bit();
 
@@ -162,7 +162,7 @@ void EEPROM :: receivePage(Uint16 pageSize, Uint16 *buffer)
     }
 }
 
-void EEPROM :: sendPage(Uint16 pageSize, Uint16 *buffer)
+void EEPROM:: sendPage(Uint16 pageSize, Uint16 *buffer)
 {
     configureSpiBus16Bit();
 
@@ -171,7 +171,7 @@ void EEPROM :: sendPage(Uint16 pageSize, Uint16 *buffer)
     }
 }
 
-bool EEPROM :: readPage(Uint16 pageNum, Uint16 *buffer)
+bool EEPROM:: readPage(Uint16 pageNum, Uint16 *buffer)
 {
     CS_ASSERT;
     sendReadCommand(pageNum);
@@ -182,7 +182,7 @@ bool EEPROM :: readPage(Uint16 pageNum, Uint16 *buffer)
     return true;
 }
 
-bool EEPROM :: writePage(Uint16 pageNum, Uint16 *buffer)
+bool EEPROM:: writePage(Uint16 pageNum, Uint16 *buffer)
 {
     setWriteLatch();
 

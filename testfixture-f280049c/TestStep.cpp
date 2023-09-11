@@ -29,12 +29,12 @@
 #define DIRECTION_FEEDBACK GpioDataRegs.GPBDAT.bit.GPIO40;
 #define ENABLE_FEEDBACK GpioDataRegs.GPBDAT.bit.GPIO56;
 
-TestStep :: TestStep( StepperDrive *stepperDrive )
+TestStep:: TestStep( StepperDrive *stepperDrive )
 {
     this->stepperDrive = stepperDrive;
 }
 
-void TestStep :: initHardware(void)
+void TestStep:: initHardware(void)
 {
     EALLOW;
     GpioCtrlRegs.GPBMUX1.bit.GPIO37 = 0;
@@ -48,7 +48,7 @@ void TestStep :: initHardware(void)
     EDIS;
 }
 
-void TestStep :: test(LED_REG *output)
+void TestStep:: test(LED_REG *output)
 {
     bool pass = true;
 

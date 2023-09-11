@@ -23,55 +23,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #include "StepperDrive.h"
 
+StepperDrive::StepperDrive(void) {
+  //
+  // Set up global state variables
+  //
+  this->currentPosition     = 0;
+  this->desiredPosition     = 0;
+  this->threadingToShoulder = false;
 
-StepperDrive :: StepperDrive(void)
-{
-    //
-    // Set up global state variables
-    //
-    this->currentPosition = 0;
-    this->desiredPosition = 0;
-    this->threadingToShoulder = false;
-
-    //
-    // State machine starts at state zero
-    //
-    this->state = 0;
+  //
+  // State machine starts at state zero
+  //
+  this->state = 0;
 }
 
+void StepperDrive::initHardware(void) {
+  //
+  // Configure GPIO pins for output
+  // GPIO0 = Step
+  // GPIO1 = Direction
+  // GPIO6 - Enable
+  // GPIO
+  //
+  EALLOW;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 0;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 0;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 0;
 
-void StepperDrive :: initHardware(void)
-{
-    //
-    // Configure GPIO pins for output
-    // GPIO0 = Step
-    // GPIO1 = Direction
-    // GPIO6 - Enable
-    // GPIO
-    //
-    EALLOW;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 0;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 0;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 0;
+  GpioCtrlRegs.GPADIR.bit.GPIO0 = 1;
+  GpioCtrlRegs.GPADIR.bit.GPIO1 = 1;
+  GpioCtrlRegs.GPADIR.bit.GPIO6 = 1;
+  GpioCtrlRegs.GPADIR.bit.GPIO7 = 0;   // input
 
-    GpioCtrlRegs.GPADIR.bit.GPIO0 = 1;
-    GpioCtrlRegs.GPADIR.bit.GPIO1 = 1;
-    GpioCtrlRegs.GPADIR.bit.GPIO6 = 1;
-    GpioCtrlRegs.GPADIR.bit.GPIO7 = 0; // input
+  GPIO_CLEAR_STEP;
+  GPIO_CLEAR_DIRECTION;
+  EDIS;
 
-    GPIO_CLEAR_STEP;
-    GPIO_CLEAR_DIRECTION;
-    EDIS;
-
-    setEnabled(START_POWER_ON);
+  setEnabled(START_POWER_ON);
 }
-
-
-
-
-
-

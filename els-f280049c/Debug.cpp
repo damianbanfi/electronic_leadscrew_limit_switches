@@ -23,25 +23,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #include "Debug.h"
 
+Debug::Debug(void) {}
 
-Debug :: Debug( void )
-{
-
-}
-
-
-void Debug :: initHardware( void )
-{
-    // set up GPIO pins as output for debugging
-    EALLOW;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO2 = 1;
-    GpioDataRegs.GPACLEAR.bit.GPIO2 = 1;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO3 = 1;
-    GpioDataRegs.GPACLEAR.bit.GPIO3 = 1;
-    EDIS;
+void Debug::initHardware(void) {
+  // set up GPIO pins as output for debugging
+  EALLOW;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO2  = 0;
+  GpioCtrlRegs.GPADIR.bit.GPIO2   = 1;
+  GpioDataRegs.GPACLEAR.bit.GPIO2 = 1;
+  GpioCtrlRegs.GPAMUX1.bit.GPIO3  = 0;
+  GpioCtrlRegs.GPADIR.bit.GPIO3   = 1;
+  GpioDataRegs.GPACLEAR.bit.GPIO3 = 1;
+  EDIS;
 }

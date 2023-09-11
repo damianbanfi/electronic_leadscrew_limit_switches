@@ -104,22 +104,22 @@ public:
     void ISR(void);
 };
 
-inline void StepperDrive :: setDesiredPosition(int32 steps)
+inline void StepperDrive:: setDesiredPosition(int32 steps)
 {
     this->desiredPosition = steps;
 }
 
-inline void StepperDrive :: incrementCurrentPosition(int32 increment)
+inline void StepperDrive:: incrementCurrentPosition(int32 increment)
 {
     this->currentPosition += increment;
 }
 
-inline void StepperDrive :: setCurrentPosition(int32 position)
+inline void StepperDrive:: setCurrentPosition(int32 position)
 {
     this->currentPosition = position;
 }
 
-inline bool StepperDrive :: isAlarm()
+inline bool StepperDrive:: isAlarm()
 {
 #ifdef USE_ALARM_PIN
     return GPIO_GET_ALARM;
@@ -129,7 +129,7 @@ inline bool StepperDrive :: isAlarm()
 }
 
 
-inline void StepperDrive :: ISR(void)
+inline void StepperDrive:: ISR(void)
 {
     switch( this->state ) {
 

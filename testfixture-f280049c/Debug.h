@@ -45,22 +45,22 @@ public:
 };
 
 
-inline void Debug :: begin1( void )
+inline void Debug:: begin1( void )
 {
     GpioDataRegs.GPASET.bit.GPIO2 = 1;
 }
 
-inline void Debug :: end1( void )
+inline void Debug:: end1( void )
 {
     GpioDataRegs.GPACLEAR.bit.GPIO2 = 1;
 }
 
-inline void Debug :: begin2( void )
+inline void Debug:: begin2( void )
 {
     GpioDataRegs.GPASET.bit.GPIO3 = 1;
 }
 
-inline void Debug :: end2( void )
+inline void Debug:: end2( void )
 {
     GpioDataRegs.GPACLEAR.bit.GPIO3 = 1;
 }

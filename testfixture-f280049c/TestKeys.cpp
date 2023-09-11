@@ -34,7 +34,7 @@ Uint16 light_cycle[][4] = {
        { 0,0,1,0 }
 };
 
-TestKeys :: TestKeys( void )
+TestKeys:: TestKeys( void )
 {
     this->cycle = 0;
     this->desiredKeys.all = 0;
@@ -42,12 +42,12 @@ TestKeys :: TestKeys( void )
     this->desiredKeys.bit.KS6K3 = 1;
 }
 
-void TestKeys :: initHardware(void)
+void TestKeys:: initHardware(void)
 {
 
 }
 
-void TestKeys :: test(KEY_REG keys, LED_REG *output)
+void TestKeys:: test(KEY_REG keys, LED_REG *output)
 {
     if( keys.all == this->desiredKeys.all ) {
         output->bit.A = light_cycle[cycle][0];

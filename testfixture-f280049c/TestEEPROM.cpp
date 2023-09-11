@@ -25,13 +25,13 @@
 
 #include "TestEEPROM.h"
 
-TestEEPROM :: TestEEPROM( EEPROM *eeprom )
+TestEEPROM:: TestEEPROM( EEPROM *eeprom )
 {
     this->eeprom = eeprom;
     this->count = 0;
 }
 
-void TestEEPROM :: initHardware(void)
+void TestEEPROM:: initHardware(void)
 {
 
 }
@@ -58,7 +58,7 @@ bool TestEEPROM::checkPage(Uint16 pageNum, Uint16 buf1[EEPROM_PAGE_SIZE])
     return match;
 }
 
-void TestEEPROM :: test(LED_REG *output)
+void TestEEPROM:: test(LED_REG *output)
 {
     Uint16 buf1[EEPROM_PAGE_SIZE];
 

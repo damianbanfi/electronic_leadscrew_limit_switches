@@ -1,0 +1,63 @@
+---
+# options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: LLVM
+IndentWidth: 2
+
+# Must be 80 characters or less!
+ColumnLimit: 100
+
+# does (int) x instead of (int)x
+SpaceAfterCStyleCast: true
+
+# spaces, not tabs!
+UseTab: Never
+
+# use \n instead of \r\n
+UseCRLF: false
+
+# if (x) doStuff()  is not allowed, bad style
+AllowShortIfStatementsOnASingleLine: false
+
+# Not breaking the line after the return type definition, bad style
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+
+#  #define SHORT_NAME       42
+#  #define LONGER_NAME      0x007f   # does nice spacing for macros
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+# Align array of structures
+# AlignArrayOfStructures: right
+# allign assignments
+AlignConsecutiveAssignments: Consecutive
+
+# Binary operation alignment
+BreakBeforeBinaryOperators: All
+AlignOperands: AlignAfterOperator
+
+# Comments Alignment
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+  MaxEmptyLinesToKeep: 2
+
+SpacesBeforeTrailingComments: 3
+
+ReflowComments: true
+
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+
+# Bracket alignment
+BracketAlignmentStyle: Align
+AlignAfterOpenBracket: Align
+
+# Add coments spaces at the end
+FixNamespaceComments: true
+ShortNamespaceLines: 0
+
+# Indent case labels
+IndentCaseLabels: true

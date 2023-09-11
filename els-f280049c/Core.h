@@ -23,152 +23,129 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #ifndef __CORE_H
 #define __CORE_H
 
-#include "StepperDrive.h"
-#include "Encoder.h"
 #include "ControlPanel.h"
+#include "Encoder.h"
+#include "StepperDrive.h"
 #include "Tables.h"
 
-
-class Core
-{
+class Core {
 private:
-    Encoder *encoder;
-    StepperDrive *stepperDrive;
+  Encoder *encoder;
+  StepperDrive *stepperDrive;
 
 #ifdef USE_FLOATING_POINT
-    float feed;
-    float previousFeed;
+  float feed;
+  float previousFeed;
 #else
-    const FEED_THREAD *feed;
-    const FEED_THREAD *previousFeed;
-#endif // USE_FLOATING_POINT
+  const FEED_THREAD *feed;
+  const FEED_THREAD *previousFeed;
+#endif   // USE_FLOATING_POINT
 
-    int16 feedDirection;
-    int16 previousFeedDirection;
+  int16 feedDirection;
+  int16 previousFeedDirection;
 
-    Uint32 previousSpindlePosition;
+  Uint32 previousSpindlePosition;
 
-    int32 feedRatio(Uint32 count);
+  int32 feedRatio(Uint32 count);
 
-    bool powerOn;
+  bool powerOn;
 
 public:
-    Core( Encoder *encoder, StepperDrive *stepperDrive );
+  Core(Encoder *encoder, StepperDrive *stepperDrive);
 
-    void reset(void);
-    void setFeed(const FEED_THREAD *feed);
-    void setReverse(bool reverse);
-    Uint16 getRPM(void);
-    bool isAlarm();
+  void reset(void);
+  void setFeed(const FEED_THREAD *feed);
+  void setReverse(bool reverse);
+  Uint16 getRPM(void);
+  bool isAlarm();
 
-    bool isPowerOn();
-    void setPowerOn(bool);
+  bool isPowerOn();
+  void setPowerOn(bool);
 
-    void setShoulder( void )                            { stepperDrive->setShoulder(); }
-    void setStart( void )                               { stepperDrive->setStart(); }
-    void setStartOffset( float normalisedAngleOffset );
-    void beginThreadToShoulder( bool start )            { stepperDrive->beginThreadToShoulder(start); }
-    void moveToStart( void );
-    bool isAtShoulder( void )                           { return stepperDrive->isAtShoulder(); }
-    bool isAtStart( void )                              { return stepperDrive->isAtStart(); }
-    void resetToShoulder( void );
+  void setShoulder(void) { stepperDrive->setShoulder(); }
+  void setStart(void) { stepperDrive->setStart(); }
+  void setStartOffset(float normalisedAngleOffset);
+  void beginThreadToShoulder(bool start) { stepperDrive->beginThreadToShoulder(start); }
+  void moveToStart(void);
+  bool isAtShoulder(void) { return stepperDrive->isAtShoulder(); }
+  bool isAtStart(void) { return stepperDrive->isAtStart(); }
+  void resetToShoulder(void);
 
-    void ISR( void );
+  void ISR(void);
 };
 
-inline void Core :: setFeed(const FEED_THREAD *feed)
-{
+inline void Core::setFeed(const FEED_THREAD *feed) {
 #ifdef USE_FLOATING_POINT
-    this->feed = (float)feed->numerator / feed->denominator;
+  this->feed = (float) feed->numerator / feed->denominator;
 #else
-    this->feed = feed;
-#endif // USE_FLOATING_POINT
+  this->feed = feed;
+#endif   // USE_FLOATING_POINT
 }
 
-inline Uint16 Core :: getRPM(void)
-{
-    return encoder->getRPM();
-}
+inline Uint16 Core::getRPM(void) { return encoder->getRPM(); }
 
-inline bool Core :: isAlarm()
-{
-    return this->stepperDrive->isAlarm();
-}
+inline bool Core::isAlarm() { return this->stepperDrive->isAlarm(); }
 
-inline bool Core :: isPowerOn()
-{
-    return this->powerOn;
-}
+inline bool Core::isPowerOn() { return this->powerOn; }
 
-inline int32 Core :: feedRatio(Uint32 count)
-{
+inline int32 Core::feedRatio(Uint32 count) {
 #ifdef USE_FLOATING_POINT
-    return ((float)count) * this->feed * feedDirection;
-#else // USE_FLOATING_POINT
-    return ((long long)count) * feed->numerator / feed->denominator * feedDirection;
-#endif // USE_FLOATING_POINT
+  return ((float) count) * this->feed * feedDirection;
+#else    // USE_FLOATING_POINT
+  return ((long long) count) * feed->numerator / feed->denominator * feedDirection;
+#endif   // USE_FLOATING_POINT
 }
 
-
-inline void Core :: resetToShoulder( void )
-{
-    float stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
-    stepperDrive->resetToShoulder(stepsPerUnitPitch);
+inline void Core::resetToShoulder(void) {
+  float stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
+  stepperDrive->resetToShoulder(stepsPerUnitPitch);
 }
 
-inline void Core :: setStartOffset( float normalisedAngleOffset )
-{
-    int32 offset = ((float) ENCODER_RESOLUTION) * normalisedAngleOffset * this->feed;
-    stepperDrive->setStartOffset(offset);
+inline void Core::setStartOffset(float normalisedAngleOffset) {
+  int32 offset = ((float) ENCODER_RESOLUTION) * normalisedAngleOffset * this->feed;
+  stepperDrive->setStartOffset(offset);
 }
 
-inline void Core :: moveToStart( )
-{
-    int32 stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
-    stepperDrive->moveToStart(stepsPerUnitPitch);
+inline void Core::moveToStart() {
+  int32 stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
+  stepperDrive->moveToStart(stepsPerUnitPitch);
 }
 
+inline void Core::ISR(void) {
+  if (this->feed != NULL) {
+    // read the encoder
+    Uint32 spindlePosition = encoder->getPosition();
 
+    // calculate the desired stepper position
+    int32 desiredSteps = feedRatio(spindlePosition);
+    stepperDrive->setDesiredPosition(desiredSteps);
 
-inline void Core :: ISR( void )
-{
-    if( this->feed != NULL ) {
-        // read the encoder
-        Uint32 spindlePosition = encoder->getPosition();
-
-        // calculate the desired stepper position
-        int32 desiredSteps = feedRatio(spindlePosition);
-        stepperDrive->setDesiredPosition(desiredSteps);
-
-        // compensate for encoder overflow/underflow
-        if( spindlePosition < previousSpindlePosition && previousSpindlePosition - spindlePosition > encoder->getMaxCount()/2 )
-        {
-            stepperDrive->incrementCurrentPosition(-1 * feedRatio(encoder->getMaxCount()));
-        }
-        if( spindlePosition > previousSpindlePosition && spindlePosition - previousSpindlePosition > encoder->getMaxCount()/2 )
-        {
-            stepperDrive->incrementCurrentPosition(feedRatio(encoder->getMaxCount()));
-        }
-
-        // if the feed or direction changed, reset sync to avoid a big step
-        if( feed != previousFeed || feedDirection != previousFeedDirection) {
-            stepperDrive->setCurrentPosition(desiredSteps);
-        }
-
-        // remember values for next time
-        previousSpindlePosition = spindlePosition;
-        previousFeedDirection = feedDirection;
-        previousFeed = feed;
-
-        // service the stepper drive state machine
-        stepperDrive->ISR();
+    // compensate for encoder overflow/underflow
+    if (spindlePosition < previousSpindlePosition
+        && previousSpindlePosition - spindlePosition > encoder->getMaxCount() / 2) {
+      stepperDrive->incrementCurrentPosition(-1 * feedRatio(encoder->getMaxCount()));
     }
+    if (spindlePosition > previousSpindlePosition
+        && spindlePosition - previousSpindlePosition > encoder->getMaxCount() / 2) {
+      stepperDrive->incrementCurrentPosition(feedRatio(encoder->getMaxCount()));
+    }
+
+    // if the feed or direction changed, reset sync to avoid a big step
+    if (feed != previousFeed || feedDirection != previousFeedDirection) {
+      stepperDrive->setCurrentPosition(desiredSteps);
+    }
+
+    // remember values for next time
+    previousSpindlePosition = spindlePosition;
+    previousFeedDirection   = feedDirection;
+    previousFeed            = feed;
+
+    // service the stepper drive state machine
+    stepperDrive->ISR();
+  }
 }
 
-
-
-#endif // __CORE_H
+#endif   // __CORE_H

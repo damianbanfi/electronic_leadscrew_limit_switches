@@ -23,44 +23,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
-#include "F28x_Project.h"
 #include "Core.h"
+#include "F28x_Project.h"
 
+Core::Core(Encoder *encoder, StepperDrive *stepperDrive) {
+  this->encoder      = encoder;
+  this->stepperDrive = stepperDrive;
 
+  this->feed          = NULL;
+  this->feedDirection = 0;
 
-Core :: Core( Encoder *encoder, StepperDrive *stepperDrive )
-{
-    this->encoder = encoder;
-    this->stepperDrive = stepperDrive;
+  this->previousSpindlePosition = 0;
+  this->previousFeedDirection   = 0;
+  this->previousFeed            = NULL;
 
-    this->feed = NULL;
-    this->feedDirection = 0;
-
-    this->previousSpindlePosition = 0;
-    this->previousFeedDirection = 0;
-    this->previousFeed = NULL;
-
-    setPowerOn(START_POWER_ON);  // initial power on state
+  setPowerOn(START_POWER_ON);   // initial power on state
 }
 
-void Core :: setReverse(bool reverse)
-{
-    if( reverse )
-    {
-        this->feedDirection = -1;
-    }
-    else
-    {
-        this->feedDirection = 1;
-    }
+void Core::setReverse(bool reverse) {
+  if (reverse) {
+    this->feedDirection = -1;
+  } else {
+    this->feedDirection = 1;
+  }
 }
 
-void Core :: setPowerOn(bool powerOn)
-{
-    this->powerOn = powerOn;
-    this->stepperDrive->setEnabled(powerOn);
+void Core::setPowerOn(bool powerOn) {
+  this->powerOn = powerOn;
+  this->stepperDrive->setEnabled(powerOn);
 }
-
-
-

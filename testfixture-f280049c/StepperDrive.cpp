@@ -27,7 +27,7 @@
 #include "StepperDrive.h"
 
 
-StepperDrive :: StepperDrive(void)
+StepperDrive:: StepperDrive(void)
 {
     //
     // Set up global state variables
@@ -41,7 +41,7 @@ StepperDrive :: StepperDrive(void)
     this->state = 0;
 }
 
-void StepperDrive :: initHardware(void)
+void StepperDrive:: initHardware(void)
 {
     //
     // Configure GPIO pins for output
@@ -66,9 +66,3 @@ void StepperDrive :: initHardware(void)
     GPIO_SET_ENABLE;
     EDIS;
 }
-
-
-
-
-
-

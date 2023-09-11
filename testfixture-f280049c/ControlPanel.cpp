@@ -40,7 +40,7 @@
 #define CS_RELEASE GpioDataRegs.GPBSET.bit.GPIO33 = 1
 
 
-ControlPanel :: ControlPanel(SPIBus *spiBus)
+ControlPanel:: ControlPanel(SPIBus *spiBus)
 {
     this->spiBus = spiBus;
     this->leds.all = 0;
@@ -48,7 +48,7 @@ ControlPanel :: ControlPanel(SPIBus *spiBus)
     this->brightness = 3;
 }
 
-void ControlPanel :: initHardware(void)
+void ControlPanel:: initHardware(void)
 {
     EALLOW;
 
@@ -60,14 +60,14 @@ void ControlPanel :: initHardware(void)
     EDIS;
 }
 
-void ControlPanel :: configureSpiBus( void )
+void ControlPanel:: configureSpiBus( void )
 {
     // configure the shared bus
     this->spiBus->setThreeWire();
     this->spiBus->setEightBits();
 }
 
-Uint16 ControlPanel :: reverse_byte(Uint16 x)
+Uint16 ControlPanel:: reverse_byte(Uint16 x)
 {
     static const Uint16 table[] = {
         0x0000, 0x8000, 0x4000, 0xc000, 0x2000, 0xa000, 0x6000, 0xe000,
@@ -106,7 +106,7 @@ Uint16 ControlPanel :: reverse_byte(Uint16 x)
     return table[x];
 }
 
-void ControlPanel :: sendData()
+void ControlPanel:: sendData()
 {
     int i;
     Uint16 briteVal = 0x80;
@@ -137,7 +137,7 @@ void ControlPanel :: sendData()
     SpibRegs.SPICTL.bit.TALK = 0;
 }
 
-KEY_REG ControlPanel :: readKeys(void)
+KEY_REG ControlPanel:: readKeys(void)
 {
     SpibRegs.SPICTL.bit.TALK = 1;
 
@@ -167,7 +167,7 @@ KEY_REG ControlPanel :: readKeys(void)
     return keyMask;
 }
 
-KEY_REG ControlPanel :: getKeys()
+KEY_REG ControlPanel:: getKeys()
 {
     KEY_REG newKeys;
 
@@ -178,14 +178,14 @@ KEY_REG ControlPanel :: getKeys()
     return newKeys;
 }
 
-void ControlPanel :: setBrightness( Uint16 brightness )
+void ControlPanel:: setBrightness( Uint16 brightness )
 {
     if( brightness > 8 ) brightness = 8;
 
     this->brightness = brightness;
 }
 
-void ControlPanel :: setLeds(LED_REG leds)
+void ControlPanel:: setLeds(LED_REG leds)
 {
     displayData[0] =
             (leds.bit.VREG_RED << 15) +
@@ -217,15 +217,9 @@ void ControlPanel :: setLeds(LED_REG leds)
     displayData[15] = 0x0000ffff;
 }
 
-void ControlPanel :: refresh()
+void ControlPanel:: refresh()
 {
     configureSpiBus();
 
     sendData();
 }
-
-
-
-
-
-

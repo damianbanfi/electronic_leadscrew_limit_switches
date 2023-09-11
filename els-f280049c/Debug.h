@@ -23,47 +23,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
 #include "F28x_Project.h"
 
-class Debug
-{
+class Debug {
 public:
-    Debug(void);
-    void initHardware(void);
+  Debug(void);
+  void initHardware(void);
 
-    // analyzer pin 1
-    void begin1( void );
-    void end1( void );
+  // analyzer pin 1
+  void begin1(void);
+  void end1(void);
 
-    // analyzer pin 2
-    void begin2( void );
-    void end2( void );
+  // analyzer pin 2
+  void begin2(void);
+  void end2(void);
 };
 
+inline void Debug::begin1(void) { GpioDataRegs.GPASET.bit.GPIO2 = 1; }
 
-inline void Debug :: begin1( void )
-{
-    GpioDataRegs.GPASET.bit.GPIO2 = 1;
-}
+inline void Debug::end1(void) { GpioDataRegs.GPACLEAR.bit.GPIO2 = 1; }
 
-inline void Debug :: end1( void )
-{
-    GpioDataRegs.GPACLEAR.bit.GPIO2 = 1;
-}
+inline void Debug::begin2(void) { GpioDataRegs.GPASET.bit.GPIO3 = 1; }
 
-inline void Debug :: begin2( void )
-{
-    GpioDataRegs.GPASET.bit.GPIO3 = 1;
-}
+inline void Debug::end2(void) { GpioDataRegs.GPACLEAR.bit.GPIO3 = 1; }
 
-inline void Debug :: end2( void )
-{
-    GpioDataRegs.GPACLEAR.bit.GPIO3 = 1;
-}
-
-
-#endif // __DEBUG_H
+#endif   // __DEBUG_H

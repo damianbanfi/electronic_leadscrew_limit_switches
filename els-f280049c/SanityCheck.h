@@ -72,10 +72,8 @@
 #endif
 #endif
 
-#if defined(ENCODER_USE_EQEP1) && defined (ENCODER_USE_EQEP2)
+#if defined(ENCODER_USE_EQEP1) && defined(ENCODER_USE_EQEP2)
 #error Define only one of ENCODER_USE_EQEP1 or ENCODER_USE_EQEP2
 #endif
 
-
-
-#endif // __SANITYCHECK_H
+#endif   // __SANITYCHECK_H

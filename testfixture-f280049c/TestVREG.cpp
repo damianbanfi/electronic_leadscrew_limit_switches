@@ -25,12 +25,12 @@
 
 #include "TestVREG.h"
 
-TestVREG :: TestVREG( void )
+TestVREG:: TestVREG( void )
 {
 
 }
 
-void TestVREG :: initHardware(void)
+void TestVREG:: initHardware(void)
 {
     SetVREF(ADC_ADCA, ADC_INTERNAL, ADC_VREF3P3);
     SetVREF(ADC_ADCB, ADC_INTERNAL, ADC_VREF3P3);
@@ -44,7 +44,7 @@ void TestVREG :: initHardware(void)
     EDIS;
 }
 
-void TestVREG :: test(LED_REG *output)
+void TestVREG:: test(LED_REG *output)
 {
     bool pass = false;
 

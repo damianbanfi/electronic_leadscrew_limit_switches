@@ -23,22 +23,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
-#include "F28x_Project.h"
 #include "Configuration.h"
-#include "SanityCheck.h"
 #include "ControlPanel.h"
 #include "EEPROM.h"
-#include "StepperDrive.h"
 #include "Encoder.h"
+#include "F28x_Project.h"
+#include "SanityCheck.h"
+#include "StepperDrive.h"
 
 #include "Core.h"
-#include "UserInterface.h"
 #include "Debug.h"
-
+#include "UserInterface.h"
 
 __interrupt void cpu_timer0_isr(void);
-
 
 //
 // DEPENDENCY INJECTION
@@ -73,108 +70,102 @@ Core core(&encoder, &stepperDrive);
 // User interface
 UserInterface userInterface(&controlPanel, &core, &feedTableFactory, &encoder);
 
-void main(void)
-{
+void main(void) {
 #ifdef _FLASH
-    // Copy time critical code and Flash setup code to RAM
-    // The RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
-    // symbols are created by the linker. Refer to the linker files.
-    memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
+  // Copy time critical code and Flash setup code to RAM
+  // The RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
+  // symbols are created by the linker. Refer to the linker files.
+  memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t) &RamfuncsLoadSize);
 
-    // Initialize the flash instruction fetch pipeline
-    // This configures the MCU to pre-fetch instructions from flash.
-    InitFlash();
+  // Initialize the flash instruction fetch pipeline
+  // This configures the MCU to pre-fetch instructions from flash.
+  InitFlash();
 #endif
 
-    // Initialize System Control:
-    // PLL, WatchDog, enable Peripheral Clocks
-    InitSysCtrl();
+  // Initialize System Control:
+  // PLL, WatchDog, enable Peripheral Clocks
+  InitSysCtrl();
 
-    // Disable CPU interrupts
-    DINT;
+  // Disable CPU interrupts
+  DINT;
 
-    // Initialize the PIE control registers to their default state.
-    InitPieCtrl();
+  // Initialize the PIE control registers to their default state.
+  InitPieCtrl();
 
-    // Disable CPU interrupts and clear all CPU interrupt flags
-    IER = 0x0000;
-    IFR = 0x0000;
+  // Disable CPU interrupts and clear all CPU interrupt flags
+  IER = 0x0000;
+  IFR = 0x0000;
 
-    // Initialize the PIE vector table with pointers to shell Interrupt
-    // Service Routines (ISR) to help with debugging.
-    InitPieVectTable();
+  // Initialize the PIE vector table with pointers to shell Interrupt
+  // Service Routines (ISR) to help with debugging.
+  InitPieVectTable();
 
-    // Set up the CPU0 timer ISR
-    EALLOW;
-    PieVectTable.TIMER0_INT = &cpu_timer0_isr;
-    EDIS;
+  // Set up the CPU0 timer ISR
+  EALLOW;
+  PieVectTable.TIMER0_INT = &cpu_timer0_isr;
+  EDIS;
 
-    // initialize the CPU timer
-    InitCpuTimers();   // For this example, only initialize the Cpu Timers
-    ConfigCpuTimer(&CpuTimer0, CPU_CLOCK_MHZ, STEPPER_CYCLE_US);
+  // initialize the CPU timer
+  InitCpuTimers();   // For this example, only initialize the Cpu Timers
+  ConfigCpuTimer(&CpuTimer0, CPU_CLOCK_MHZ, STEPPER_CYCLE_US);
 
-    // Use write-only instruction to set TSS bit = 0
-    CpuTimer0Regs.TCR.all = 0x4001;
+  // Use write-only instruction to set TSS bit = 0
+  CpuTimer0Regs.TCR.all = 0x4001;
 
-    // Initialize peripherals and pins
-    debug.initHardware();
-    spiBus.initHardware();
-    controlPanel.initHardware();
-    eeprom.initHardware();
-    stepperDrive.initHardware();
-    encoder.initHardware();
+  // Initialize peripherals and pins
+  debug.initHardware();
+  spiBus.initHardware();
+  controlPanel.initHardware();
+  eeprom.initHardware();
+  stepperDrive.initHardware();
+  encoder.initHardware();
 
-    // Enable CPU INT1 which is connected to CPU-Timer 0
-    IER |= M_INT1;
+  // Enable CPU INT1 which is connected to CPU-Timer 0
+  IER |= M_INT1;
 
-    // Enable TINT0 in the PIE: Group 1 interrupt 7
-    PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
+  // Enable TINT0 in the PIE: Group 1 interrupt 7
+  PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
 
-    // Enable global Interrupts and higher priority real-time debug events
-    EINT;
-    ERTM;
+  // Enable global Interrupts and higher priority real-time debug events
+  EINT;
+  ERTM;
 
-    // User interface loop
-    for(;;) {
-        // mark beginning of loop for debugging
-        debug.begin2();
+  // User interface loop
+  for (;;) {
+    // mark beginning of loop for debugging
+    debug.begin2();
 
-        // check for step backlog and panic the system if it occurs
-        if( stepperDrive.checkStepBacklog() ) {
-            userInterface.panicStepBacklog();
-        }
-
-        // service the user interface
-        userInterface.loop();
-
-        // mark end of loop for debugging
-        debug.end2();
-
-        // delay
-        DELAY_US(1000000 / UI_REFRESH_RATE_HZ);
+    // check for step backlog and panic the system if it occurs
+    if (stepperDrive.checkStepBacklog()) {
+      userInterface.panicStepBacklog();
     }
-}
 
+    // service the user interface
+    userInterface.loop();
+
+    // mark end of loop for debugging
+    debug.end2();
+
+    // delay
+    DELAY_US(1000000 / UI_REFRESH_RATE_HZ);
+  }
+}
 
 // CPU Timer 0 ISR
-__interrupt void
-cpu_timer0_isr(void)
-{
-    CpuTimer0.InterruptCount++;
+__interrupt void cpu_timer0_isr(void) {
+  CpuTimer0.InterruptCount++;
 
-    // flag entrance to ISR for timing
-    debug.begin1();
+  // flag entrance to ISR for timing
+  debug.begin1();
 
-    // service the Core engine ISR, which in turn services the StepperDrive ISR
-    core.ISR();
+  // service the Core engine ISR, which in turn services the StepperDrive ISR
+  core.ISR();
 
-    // flag exit from ISR for timing
-    debug.end1();
+  // flag exit from ISR for timing
+  debug.end1();
 
-    //
-    // Acknowledge this interrupt to receive more interrupts from group 1
-    //
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+  //
+  // Acknowledge this interrupt to receive more interrupts from group 1
+  //
+  PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
-
-

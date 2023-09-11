@@ -23,12 +23,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 #ifndef __CONFIGURATION_H
 #define __CONFIGURATION_H
-
-
-
 
 //================================================================================
 //                                  LEADSCREW
@@ -40,14 +36,11 @@
 //================================================================================
 
 // For Imperial leadscrews: pitch in Threads Per Inch (TPI)
-//#define LEADSCREW_TPI 12
+// #define LEADSCREW_TPI 12
 
 // For metric leadscrews: pitch in hundredths of a millimeter (HMM)
 // Example: 200hmm = 2mm
 #define LEADSCREW_HMM 300
-
-
-
 
 //================================================================================
 //                                STEPPER/SERVO
@@ -76,11 +69,10 @@
 // #define INVERT_STEP_PIN true
 // #define INVERT_DIRECTION_PIN true
 #define INVERT_ENABLE_PIN true
-#define INVERT_ALARM_PIN true
+#define INVERT_ALARM_PIN  true
 
 // Enable servo alarm feedback
 #define USE_ALARM_PIN
-
 
 //================================================================================
 //                                 ENCODER
@@ -98,15 +90,13 @@
 
 // Which encoder input to use
 #define ENCODER_USE_EQEP1
-//#define ENCODER_USE_EQEP2
-
+// #define ENCODER_USE_EQEP2
 
 //================================================================================
 // power on state when booted
 //================================================================================
 
-#define START_POWER_ON  false
-
+#define START_POWER_ON false
 
 //================================================================================
 // backlash value
@@ -120,7 +110,6 @@
 
 #define backlash 2
 
-
 //================================================================================
 // for automatic retraction we can set the maximum rpm of the leadscrew.
 // The speed shouldn't be too high since the leadscrew doesn't decelerate plus
@@ -130,8 +119,7 @@
 
 #define leadscrewRPM(rpm) ((200000 * 60) / rpm) / (STEPPER_MICROSTEPS * STEPPER_RESOLUTION);
 // default to 200rpm
-const int32 retractSpeed = leadscrewRPM( 100 );
-
+const int32 retractSpeed = leadscrewRPM(100);
 
 //================================================================================
 //                               CALCULATIONS
@@ -142,8 +130,6 @@ const int32 retractSpeed = leadscrewRPM( 100 );
 
 // Use floating-point math for gear ratios
 #define USE_FLOATING_POINT
-
-
 
 //================================================================================
 //                                HARDWARE
@@ -157,9 +143,6 @@ const int32 retractSpeed = leadscrewRPM( 100 );
 // See hardware version table above
 #define HARDWARE_VERSION 2
 
-
-
-
 //================================================================================
 //                                FEATURES
 //
@@ -168,10 +151,7 @@ const int32 retractSpeed = leadscrewRPM( 100 );
 
 // Ignore all key presses when the machine is running.  Normally, only the mode
 // and direction keys are ignored.
-//#define IGNORE_ALL_KEYS_WHEN_RUNNING
-
-
-
+// #define IGNORE_ALL_KEYS_WHEN_RUNNING
 
 //================================================================================
 //                              VALIDATION/TRIP
@@ -184,7 +164,6 @@ const int32 retractSpeed = leadscrewRPM( 100 );
 // output steps faster than this, it will get behind and will stop automatically
 // when the buffered step count exceeds this value.
 #define MAX_BUFFERED_STEPS 100
-
 
 //================================================================================
 //                               CPU / TIMING
@@ -205,7 +184,6 @@ const int32 retractSpeed = leadscrewRPM( 100 );
 
 // Microprocessor system clock
 #define CPU_CLOCK_MHZ 100
-#define CPU_CLOCK_HZ (CPU_CLOCK_MHZ * 1000000)
+#define CPU_CLOCK_HZ  (CPU_CLOCK_MHZ * 1000000)
 
-
-#endif // __CONFIGURATION_H
+#endif   // __CONFIGURATION_H

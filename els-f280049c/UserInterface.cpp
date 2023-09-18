@@ -298,7 +298,7 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       // custom threads
     case kCustomThread:   // init
       setMessage(&CUSTOM_THREAD);
-      this - menuState++;
+      this->menuState++;
       break;
     case kCustomThread
         + 1:   // wait for keypress, either select this option, move to new or timeout
@@ -312,10 +312,10 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       // Thread to shoulder
     case kThreadToShoulder:   // init
       setMessage(&THREAD_TO_SHOULDER);
-      this - menuState++;
+      this->menuState++;
       break;
-    case kThreadToShoulder
-        + 1:   // wait for keypress, either select this option, move to new or timeout
+    case kThreadToShoulder + 1:
+      // wait for keypress, either select this option, move to new or timeout
       cycleOptions(kCustomThread, kShowPosition);   // link any other menu options here
       break;
     case kThreadToShoulder + 2:                     // run loop
@@ -326,7 +326,7 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       // Spindle position / RPM
     case kShowPosition:   // init
       setMessage(showAngle ? &RPM : &POSITION);
-      this - menuState++;
+      this->menuState++;
       break;
     case kShowPosition
         + 1:   // wait for keypress, either select this option, move to new or timeout

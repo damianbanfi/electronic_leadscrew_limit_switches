@@ -23,11 +23,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "F28x_Project.h"
 #include "Configuration.h"
 #include "ControlPanel.h"
 #include "EEPROM.h"
 #include "Encoder.h"
-#include "F28x_Project.h"
 #include "SanityCheck.h"
 #include "StepperDrive.h"
 

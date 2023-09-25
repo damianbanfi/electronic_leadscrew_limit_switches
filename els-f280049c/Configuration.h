@@ -26,6 +26,9 @@
 #ifndef __CONFIGURATION_H
 #define __CONFIGURATION_H
 
+
+#include "F28x_Project.h"
+
 //================================================================================
 //                                  LEADSCREW
 //

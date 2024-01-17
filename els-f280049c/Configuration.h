@@ -26,7 +26,6 @@
 #ifndef __CONFIGURATION_H
 #define __CONFIGURATION_H
 
-
 #include "F28x_Project.h"
 
 //================================================================================
@@ -60,8 +59,8 @@
 //================================================================================
 
 // Steps and microsteps
-#define STEPPER_MICROSTEPS 8
-#define STEPPER_RESOLUTION 200
+#define STEPPER_MICROSTEPS 2
+#define STEPPER_RESOLUTION 1600
 
 // Separate step and microstep settings for feed rates.  Redefine these if your
 // lathe has a separate feed drive train with a different ratio.
@@ -89,7 +88,7 @@
 //================================================================================
 
 // Encoder resolution (counts per revolution)
-#define ENCODER_RESOLUTION 4000
+#define ENCODER_RESOLUTION 4096
 
 // Which encoder input to use
 #define ENCODER_USE_EQEP1

@@ -27,11 +27,11 @@
 
 const MESSAGE STARTUP_MESSAGE_2
     = {.message     = {LETTER_E, LETTER_L, LETTER_S, DASH, ONE | POINT, SIX | POINT, ZERO, ZERO},
-       .displayTime = UI_REFRESH_RATE_HZ * 0.5};
+       .displayTime = UI_REFRESH_RATE_HZ * 1.5};
 
 const MESSAGE STARTUP_MESSAGE_1
-    = {.message     = {LETTER_C, LETTER_L, LETTER_O, LETTER_U, LETTER_G, LETTER_H, FOUR, TWO},
-       .displayTime = UI_REFRESH_RATE_HZ * 0.5,
+    = {.message     = {LETTER_P, LETTER_A, LETTER_B, LETTER_L, LETTER_O, DASH, TWO, FOUR},
+       .displayTime = UI_REFRESH_RATE_HZ * 1.5,
        .next        = &STARTUP_MESSAGE_2};
 
 const MESSAGE CUSTOM_THREAD

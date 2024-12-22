@@ -49,7 +49,7 @@ private:
   bool showAngle;
 
   bool isInMenu;
-  Uint16 menuState, menuSubState;
+  Uint16 menuState, menuSubState, limitSwState;
 
   int numStarts, currentStart;
 
@@ -62,9 +62,6 @@ private:
 
   const FEED_THREAD *loadFeedTable();
   LED_REG calculateLEDs();
-  void setMessage(const MESSAGE *message);
-  void overrideMessage(void);
-  void clearMessage(void);
 
   void cycleOptions(Uint16 next, Uint16 prev);   // cycle menu options
 
@@ -73,12 +70,16 @@ public:
                 Encoder *encoder);
 
   void loop(void);
-
+  void setMessage(const MESSAGE *message);
+  void overrideMessage(void);
+  void clearMessage(void);
   void mainLoop(Uint16 currentRpm);
   void menuLoop(Uint16 currentRpm);
   void beginMenu(void);
   void customThreadLoop(Uint16 currentRpm);
   void threadToShoulderLoop(Uint16 currentRpm);
+  // Get the current state Thread -> 1, Feed -> 0
+  bool getThreadState() { return this->thread; }
 
   void panicStepBacklog(void);
 };

@@ -36,6 +36,9 @@ private:
   Encoder *encoder;
   StepperDrive *stepperDrive;
 
+  // Spindle position idication: 0 -> Forward ; 1 -> Reverse
+  bool spindleDirection;
+
 #ifdef USE_FLOATING_POINT
   float feed;
   float previousFeed;
@@ -61,7 +64,9 @@ public:
   void setReverse(bool reverse);
   Uint16 getRPM(void);
   bool isAlarm();
-
+  bool getSpindleDirection() { return this->spindleDirection; }
+  bool getLimitSw() { return stepperDrive->getLimitSw(); }
+  Uint16 getLimitSwState() { return stepperDrive->getLimitSwState(); }
   bool isPowerOn();
   void setPowerOn(bool);
 
@@ -69,6 +74,7 @@ public:
   void setStart(void) { stepperDrive->setStart(); }
   void setStartOffset(float normalisedAngleOffset);
   void beginThreadToShoulder(bool start) { stepperDrive->beginThreadToShoulder(start); }
+  void setThread(bool thread) { stepperDrive->setThread(thread); }
   void moveToStart(void);
   bool isAtShoulder(void) { return stepperDrive->isAtShoulder(); }
   bool isAtStart(void) { return stepperDrive->isAtStart(); }
@@ -83,6 +89,9 @@ inline void Core::setFeed(const FEED_THREAD *feed) {
 #else
   this->feed = feed;
 #endif   // USE_FLOATING_POINT
+  // Set the new steps per Spindle revolution for use in shoulder or limit sw.
+  float stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
+  stepperDrive->setStepsPerUnitPitch(stepsPerUnitPitch);
 }
 
 inline Uint16 Core::getRPM(void) { return encoder->getRPM(); }
@@ -99,10 +108,7 @@ inline int32 Core::feedRatio(Uint32 count) {
 #endif   // USE_FLOATING_POINT
 }
 
-inline void Core::resetToShoulder(void) {
-  float stepsPerUnitPitch = (float) ENCODER_RESOLUTION * this->feed;
-  stepperDrive->resetToShoulder(stepsPerUnitPitch);
-}
+inline void Core::resetToShoulder(void) { stepperDrive->resetToShoulder(); }
 
 inline void Core::setStartOffset(float normalisedAngleOffset) {
   int32 offset = ((float) ENCODER_RESOLUTION) * normalisedAngleOffset * this->feed;
@@ -138,13 +144,24 @@ inline void Core::ISR(void) {
       stepperDrive->setCurrentPosition(desiredSteps);
     }
 
+    // Check the spindle direction:
+    // - spindlePosition >  previousSpindlePosition : Forward direction -> 0
+    // - spindlePosition <  previousSpindlePosition : Reverse direction -> 1
+    // - spindlePosition == previousSpindlePosition : No change
+    if (spindlePosition > previousSpindlePosition)
+      // Forward
+      this->spindleDirection = 0;
+    else if (spindlePosition < previousSpindlePosition)
+      // Reverse
+      this->spindleDirection = 1;
+
     // remember values for next time
     previousSpindlePosition = spindlePosition;
     previousFeedDirection   = feedDirection;
     previousFeed            = feed;
 
     // service the stepper drive state machine
-    stepperDrive->ISR();
+    stepperDrive->ISR(encoder->getRPM(), this->spindleDirection);
   }
 }
 

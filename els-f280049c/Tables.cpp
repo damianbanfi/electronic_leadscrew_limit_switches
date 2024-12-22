@@ -148,7 +148,7 @@ const FEED_THREAD metric_thread_table[] = {
   {.display = {BLANK,         POINT, SEVEN, BLANK}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(70)},
   {.display = {BLANK,         POINT, SEVEN,  FIVE}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(75)},
   {.display = {BLANK,         POINT, EIGHT, BLANK}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(80)},
-  {.display = {BLANK,           ONE, EIGHT,  FIVE}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(85)},
+  {.display = {BLANK,         POINT, EIGHT,  FIVE}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(85)},
   {.display = {BLANK,           ONE, BLANK, BLANK}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(100)},
   {.display = {BLANK,   ONE | POINT,   TWO,  FIVE}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(125)},
   {.display = {BLANK,   ONE | POINT,  FIVE, BLANK}, .leds = LED_THREAD | LED_MM, HMM_FRACTION(150)},

@@ -189,3 +189,15 @@ const int32 retractSpeed = leadscrewRPM(100);
 #define CPU_CLOCK_HZ  (CPU_CLOCK_MHZ * 1000000)
 
 #endif   // __CONFIGURATION_H
+
+//================================================================================
+//                                LIMIT SWITCH
+//
+// Configurations for the limit switch operation.
+//================================================================================
+// Limit Switch Operation enable/disable
+#define LIMIT_SW_FUNCTIONALITY
+// GPIO Pin used for the external signal
+#define LIMIT_SW_GPIO 10
+// GPIO Debug LED 5
+#define LED_5 34

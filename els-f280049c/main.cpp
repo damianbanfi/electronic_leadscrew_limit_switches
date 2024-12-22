@@ -23,11 +23,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "F28x_Project.h"
 #include "Configuration.h"
 #include "ControlPanel.h"
 #include "EEPROM.h"
 #include "Encoder.h"
+#include "F28x_Project.h"
 #include "SanityCheck.h"
 #include "StepperDrive.h"
 
@@ -35,13 +35,9 @@
 #include "Debug.h"
 #include "UserInterface.h"
 
+// Interrupt Function Prototypes
 __interrupt void cpu_timer0_isr(void);
-
-//
-// DEPENDENCY INJECTION
-//
-// Declare all of the main components and wire them together
-//
+__interrupt void xint1_isr(void);
 
 // Debug harness
 Debug debug;
@@ -102,7 +98,9 @@ void main(void) {
 
   // Set up the CPU0 timer ISR
   EALLOW;
+  // Configure interrupt functions pointers
   PieVectTable.TIMER0_INT = &cpu_timer0_isr;
+  PieVectTable.XINT1_INT  = &xint1_isr;
   EDIS;
 
   // initialize the CPU timer
@@ -120,11 +118,29 @@ void main(void) {
   stepperDrive.initHardware();
   encoder.initHardware();
 
-  // Enable CPU INT1 which is connected to CPU-Timer 0
-  IER |= M_INT1;
+  // Configure Led 5 for debug
+  EALLOW;
+  GPIO_SetupPinOptions(LED_5, GPIO_OUTPUT, GPIO_OPENDRAIN);
+  EDIS;
 
+#ifdef LIMIT_SW_FUNCTIONALITY
+  // Configure Limit-Switch input for interrupt on GPIO10, for XINT1
+  GPIO_SetupPinOptions(LIMIT_SW_GPIO, GPIO_INPUT, GPIO_PULLUP | GPIO_SYNC);
+  GPIO_SetupXINT1Gpio(LIMIT_SW_GPIO);
+  // Configure XINT1
+  XintRegs.XINT1CR.bit.POLARITY = 0;   // Falling edge interrupt
+  // Enable XINT1in the PIE: Group 1 interrupt 4
+  // Enable INT1 which is connected to WAKEINT:
+  PieCtrlRegs.PIECTRL.bit.ENPIE = 1;   // Enable the PIE block
+  PieCtrlRegs.PIEIER1.bit.INTx4 = 1;   // Enable PIE Group 1 INT4
+#endif
+  // Enable XINT1
+  XintRegs.XINT1CR.bit.ENABLE = 1;
   // Enable TINT0 in the PIE: Group 1 interrupt 7
   PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
+
+  // Enable CPU INT1 which is connected to CPU-Timer 0
+  IER |= M_INT1;
 
   // Enable global Interrupts and higher priority real-time debug events
   EINT;
@@ -167,5 +183,13 @@ __interrupt void cpu_timer0_isr(void) {
   //
   // Acknowledge this interrupt to receive more interrupts from group 1
   //
+  PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+}
+
+// XINT1 ISR
+__interrupt void xint1_isr(void) {
+  // Assert the flag to indicate the limit Switch has been reached
+  stepperDrive.limitSwReached();
+  // Acknowledge this interrupt to receive more interrupts from group 1
   PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }

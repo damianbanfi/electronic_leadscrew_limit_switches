@@ -99,24 +99,46 @@ private:
   //
   Uint16 state;
 
+  // Limit Switch State
+  Uint16 limitSwState;
+  // Previous spindle direction for limit switch release action
+  bool prevSpindleDir;
+  // Save previus difference sign for LimitSw operation. true > 0 ; false < 0.
+  bool prevDiffSignPositive;
+  // Steps per spindle revolution, based on the current feed
+  float stepsPerUnitPitch;
+  // Thread/feed status from user interface. 1: Thread ; 0: Feed
+  bool thread;
+
   //
   // Is the drive enabled?
   //
   bool enabled;
 
+  // Limit switch interrupt indication
+  bool limitSwitchInt;
+
 public:
-  StepperDrive();
+  StepperDrive(void);
   void initHardware(void);
 
   bool shoulderISR(int32 diff);
+  bool limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDirection);
+  void limitSwReached(void) { this->limitSwitchInt = true; }
+  void setStepsPerUnitPitch(float stepsPerUnitPitch) {
+    this->stepsPerUnitPitch = stepsPerUnitPitch;
+  }
+  bool getLimitSw() { return this->limitSwitchInt; }
+  Uint16 getLimitSwState() { return this->limitSwState; }
   void beginThreadToShoulder(bool start);
   void moveToStart(int32 stepsPerUnitPitch);
   void setShoulder(void) { this->shoulderPosition = currentPosition; }
   void setStart(void) { this->startPosition = this->currentPosition; }
   void setStartOffset(int32 startOffset);
+  void setThread(bool thread) { this->thread = thread; }
   bool isAtShoulder(void);
   bool isAtStart(void);
-  void resetToShoulder(float stepsPerUnitPitch);
+  void resetToShoulder(void);
   int32 getDistanceToShoulder(void) { return desiredPosition - shoulderPosition; }
 
   void setDesiredPosition(int32 steps) { this->desiredPosition = steps; }
@@ -129,7 +151,7 @@ public:
 
   bool isAlarm();
 
-  void ISR(void);
+  void ISR(Uint16 rpm, bool spindleDirection);
 };
 
 inline void StepperDrive::incrementCurrentPosition(int32 increment) {
@@ -194,14 +216,14 @@ inline void StepperDrive::beginThreadToShoulder(bool start) {
 
 // we have a desired position that's behind the shoulder, calculate a currentPosition that moves us
 // within 1 thread of the shoulder whilst still maintaining the angular relationship
-inline void StepperDrive::resetToShoulder(float stepsPerUnitPitch) {
+inline void StepperDrive::resetToShoulder(void) {
   // total steps we've overshot by
   float diff = this->desiredPosition - this->currentPosition;
 
   // discard the fractional part to get the number of full threads we need to traverse to close up
   // the gap
-  int32 ival = diff / stepsPerUnitPitch;
-  ival       = ival * stepsPerUnitPitch;
+  int32 ival = diff / this->stepsPerUnitPitch;
+  ival       = ival * this->stepsPerUnitPitch;
 
   this->incrementCurrentPosition(ival);
 }
@@ -279,14 +301,125 @@ inline bool StepperDrive::shoulderISR(int32 diff) {
   return false;
 }
 
-inline void StepperDrive::ISR(void) {
+// handle the limit switch and his behavior during the ISR. Returns true to block stepper movement
+inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDirection) {
+  // Check if the Limit Switch is active
+  if (this->limitSwitchInt) {
+    // Turn on the led indicator
+    GPIO_WritePin(LED_5, 0);
+    // Only do this when it's enabled and on the beginning of a clock pulse (allow pulses that have
+    // been started to complete)
+    if ((this->state < 2) && this->enabled) {
+      // Check the current Status between Thread or Feed mode, the behavior
+      // of the limit switch is sligthly different
+      if (this->thread) {
+        // In Thread mode the movement is stopped and it waits until the spindle it's also stopped
+        // or reversed, then substract and integer number of spindle evolutions to close the gap.
+        // Finally waits until the diff is 0 or changed the sign to finish the limit siwtch
+        // operation.
+        switch (this->limitSwState) {
+          case 0:
+            if (rpm == 0) {
+              // Spindle is stoped so probably is a manual aproximation
+              // go to state 1 to indicate limitSw on user interface
+              this->limitSwState = 1;
+            } else {
+              // Limit reached in thread operation
+              // Save current spindle direction
+              this->prevSpindleDir = spindleDirection;
+              // go to next state
+              this->limitSwState = 2;
+            }
+            break;
+          case 1:
+            // Wait until RPM is different to 0 or the limitSw is removed
+            if (rpm != 0) {
+              // go to the first state
+              this->limitSwState = 0;
+            } else if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
+              // Limit Sw released, so go back to state 0 and clear the limitSw indication
+              this->limitSwitchInt = false;
+              this->limitSwState   = 0;
+              // Allow the movement again
+              return false;
+            }
+            break;
+
+          case 2:
+            // Wait until the spindle is stoped
+            // Or detect if there si a change in the spindle direction
+            if ((rpm == 0) || (spindleDirection != this->prevSpindleDir)) {
+              // Close the gap between the desired steps count and the current position
+              this->resetToShoulder();
+              prevDiffSignPositive = (diff < 0) ? true : false;
+              // go to next state
+              this->limitSwState = 3;
+            }
+            break;
+
+          case 3:
+            // Spindle is stoped or in the oposite direction, so wait until
+            // the difference is 0 or a change in the diff sign
+            if ((diff == 0) || (diff < 0 && prevDiffSignPositive)
+                || (diff > 0 && !prevDiffSignPositive)) {
+              // Reset the limit switch operation
+              this->limitSwitchInt = false;
+              this->limitSwState   = 0;
+              // Allow the movement again
+              return false;
+            }
+        }
+        // disable movement
+        return true;
+      }
+      // In Feed mode the Limit Switch stops the movement and only waits until the input is
+      // released, that mean the limit switch unlocked. Thre is no need of synchronization with the
+      // spindle because is not a Thread.
+      else {
+        switch (this->limitSwState) {
+          case 0:
+            // go to next state
+            this->limitSwState = 1;
+            break;
+          case 1:
+            if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
+              // resinchronize the position
+              this->currentPosition = this->desiredPosition;
+              // Clear the limit switch operation
+              this->limitSwitchInt = false;
+              this->limitSwState   = 0;
+              // Allow the movement again
+              return false;
+            }
+        }
+        // disable movement
+        return true;
+      }
+    } else if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
+      // Clear the limit switch operation
+      this->limitSwitchInt = false;
+    }
+  }
+  // Allow movement
+  return false;
+}
+
+inline void StepperDrive::ISR(Uint16 rpm, bool spindleDirection) {
   int32 diff = this->desiredPosition - this->currentPosition;
 
+  // Check if Thread to Shoulder is being used and takes the control
   if (shoulderISR(diff))
     return;
 
+  // Check if the Limit-Switch has been reached
+  if (limitSwitchISR(diff, rpm, spindleDirection))
+    return;
+  // Turn-off the indicator led.
+  if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1)
+    GPIO_WritePin(LED_5, 1);
+
   // generate step
-  if (enabled) {
+  if (this->enabled) {
     switch (this->state) {
       case 0:
         // Step = 0; Dir = 0

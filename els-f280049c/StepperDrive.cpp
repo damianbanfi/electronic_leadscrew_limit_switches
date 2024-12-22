@@ -25,7 +25,7 @@
 
 #include "StepperDrive.h"
 
-StepperDrive::StepperDrive(void) {
+StepperDrive::StepperDrive() {
   //
   // Set up global state variables
   //
@@ -37,9 +37,15 @@ StepperDrive::StepperDrive(void) {
   // State machine starts at state zero
   //
   this->state = 0;
+  // Clear the Limit Switch indication.
+  this->limitSwitchInt = false;
+  // Clear Limit Switch State
+  this->limitSwState = 0;
 }
 
 void StepperDrive::initHardware(void) {
+  // Clear the Limit Switch indication.
+  limitSwitchInt = false;
   //
   // Configure GPIO pins for output
   // GPIO0 = Step

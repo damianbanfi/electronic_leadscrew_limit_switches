@@ -30,7 +30,7 @@ const MESSAGE STARTUP_MESSAGE_2
        .displayTime = UI_REFRESH_RATE_HZ * 1.5};
 
 const MESSAGE STARTUP_MESSAGE_1
-    = {.message     = {LETTER_P, LETTER_A, LETTER_B, LETTER_L, LETTER_O, DASH, TWO, FOUR},
+    = {.message     = {LETTER_P, LETTER_A, LETTER_B, LETTER_L, LETTER_O, DASH, TWO, FIVE},
        .displayTime = UI_REFRESH_RATE_HZ * 1.5,
        .next        = &STARTUP_MESSAGE_2};
 
@@ -47,7 +47,7 @@ const MESSAGE STOP
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE WAIT
-    = {.message     = {LETTER_W, LETTER_A, LETTER_I, LETTER_T, BLANK, BLANK, BLANK, BLANK},
+    = {.message     = {LETTER_W1, LETTER_W2, LETTER_A, LETTER_I, LETTER_T, BLANK, BLANK, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 1.0};
 
 const MESSAGE GO_SHOULDER
@@ -62,12 +62,27 @@ const MESSAGE RETRACT
     = {.message     = {LETTER_R, LETTER_E, LETTER_T, LETTER_R, LETTER_A, LETTER_C, LETTER_T, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
+const MESSAGE REVERSE
+    = {.message     = {LETTER_R, LETTER_E, LETTER_V, LETTER_E, LETTER_R, LETTER_S, LETTER_E, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+
 const MESSAGE POSITION
     = {.message = {LETTER_P, LETTER_O, LETTER_S, LETTER_I, LETTER_T, LETTER_I, LETTER_O, LETTER_N},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
-const MESSAGE RPM = {.message = {LETTER_R, LETTER_P, LETTER_M, BLANK, BLANK, BLANK, BLANK, BLANK},
-                     .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+extern const MESSAGE LIMIT_SW_2;
+const MESSAGE LIMIT_SW
+    = {.message     = {LETTER_L, LETTER_I, LETTER_M1, LETTER_M2, LETTER_I, LETTER_T, BLANK, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 0.1,
+       .next        = &LIMIT_SW_2};
+
+const MESSAGE LIMIT_SW_2 = {.message     = {BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK},
+                            .displayTime = UI_REFRESH_RATE_HZ * 0.1,
+                            .next        = &LIMIT_SW};
+
+const MESSAGE RPM
+    = {.message     = {LETTER_R, LETTER_P, LETTER_M1, LETTER_M2, BLANK, BLANK, BLANK, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 extern const MESSAGE BACKLOG_PANIC_MESSAGE_2;
 const MESSAGE BACKLOG_PANIC_MESSAGE_1
@@ -80,8 +95,9 @@ const MESSAGE BACKLOG_PANIC_MESSAGE_2
        .next        = &BACKLOG_PANIC_MESSAGE_1};
 
 // non const messages so we can change the text
-MESSAGE MULTI = {.message = {LETTER_M, LETTER_U, LETTER_L, LETTER_T, LETTER_I, BLANK, BLANK, BLANK},
-                 .displayTime = UI_REFRESH_RATE_HZ * 0.2};
+MESSAGE MULTI
+    = {.message     = {LETTER_M1, LETTER_M2, LETTER_U, LETTER_L, LETTER_T, LETTER_I, BLANK, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 0.2};
 
 MESSAGE BEGIN = {.message = {LETTER_B, LETTER_E, LETTER_G, LETTER_I, LETTER_N, BLANK, BLANK, BLANK},
                  .displayTime = UI_REFRESH_RATE_HZ * 0.2};
@@ -105,6 +121,8 @@ UserInterface::UserInterface(ControlPanel *controlPanel, Core *core,
   this->keys.all = 0xff;
 
   this->isInMenu = false;
+
+  this->limitSwState = 0;
 
   // initialize the core so we start up correctly
   core->setReverse(this->reverse);
@@ -217,6 +235,7 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
       if (keys.bit.FEED_THREAD) {
         this->thread = !this->thread;
         core->setFeed(loadFeedTable());
+        core->setThread(this->thread);
       }
       if (keys.bit.FWD_REV) {
         this->reverse = !this->reverse;
@@ -252,6 +271,48 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
 #ifdef IGNORE_ALL_KEYS_WHEN_RUNNING
   }
 #endif   // IGNORE_ALL_KEYS_WHEN_RUNNING
+
+  // Check for limit Sw and PowerOn, then print messages
+  if (core->getLimitSw() && this->core->isPowerOn()) {
+    // Check the current Status between Thread or Feed mode, the behavior
+    // of the limit switch is sligthly different
+    if (this->thread) {
+      // Check first if there is a new state
+      if (core->getLimitSwState() != limitSwState) {
+        limitSwState = core->getLimitSwState();
+        // In Thread mode the movement is stopped and it waits until the spindle it's also stopped
+        // or reversed, so print the Stop message, and when is stoped reverse message
+        switch (limitSwState) {
+          case 1:
+            // Limit Switch Reached, print Stop messaje for Stopt the Spindle
+            setMessage(&LIMIT_SW);
+            break;
+          case 2:
+            // Limit Switch Reached, print Stop messaje for Stopt the Spindle
+            setMessage(&STOP);
+            break;
+
+          case 3:
+            // Set mensage to indicate reverse
+            setMessage(&REVERSE);
+            break;
+        }
+      }
+    }
+    // In Feed mode the Limit Switch stops the movement and only waits until the input is
+    // released
+    else if (limitSwState == 0) {
+      // Set mensage to Limit Switch operation
+      setMessage(&LIMIT_SW);
+      // Do this just one time
+      limitSwState = 1;
+    }
+  } else if (limitSwState != 0) {
+    // Clear display message
+    clearMessage();
+    // Clear this for next time
+    limitSwState = 0;
+  }
 }
 
 // menu loop code
@@ -300,8 +361,8 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       setMessage(&CUSTOM_THREAD);
       this->menuState++;
       break;
-    case kCustomThread
-        + 1:   // wait for keypress, either select this option, move to new or timeout
+    case kCustomThread + 1:
+      // wait for keypress, either select this option, move to new or timeout
       cycleOptions(kShowPosition, kThreadToShoulder);   // link any other menu options here
       break;
     case kCustomThread + 2:                             // run loop

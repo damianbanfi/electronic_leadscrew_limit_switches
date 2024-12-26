@@ -356,12 +356,21 @@ void FeedTableFactory::incCustomDigit(Uint16 digit) {
   Uint16 tens     = pitch / 10;
   Uint16 units    = pitch - (tens * 10);
 
-  if (digit == 1 && hundreds < 9)
-    hundreds++;
-  else if (digit == 2 && tens < 9)
-    tens++;
-  else if (digit == 3 && units < 9)
-    units++;
+  if (digit == 1)
+    if (hundreds < 9)
+      hundreds++;
+    else
+      hundreds = 0;
+  else if (digit == 2)
+    if (tens < 9)
+      tens++;
+    else
+      tens = 0;
+  else if (digit == 3)
+    if (units < 9)
+      units++;
+    else
+      units = 0;
 
   this->customPitch = hundreds * 100 + tens * 10 + units;
 
@@ -377,12 +386,21 @@ void FeedTableFactory::decCustomDigit(Uint16 digit) {
   Uint16 tens     = pitch / 10;
   Uint16 units    = pitch - (tens * 10);
 
-  if (digit == 1 && hundreds > 0)
-    hundreds--;
-  else if (digit == 2 && tens > 0)
-    tens--;
-  else if (digit == 3 && units > 0)
-    units--;
+  if (digit == 1)
+    if (hundreds > 0)
+      hundreds--;
+    else
+      hundreds = 9;
+  else if (digit == 2)
+    if (tens > 0)
+      tens--;
+    else
+      tens = 9;
+  else if (digit == 3)
+    if (units > 0)
+      units--;
+    else
+      units = 9;
 
   this->customPitch = hundreds * 100 + tens * 10 + units;
 
@@ -393,12 +411,12 @@ void FeedTableFactory::decCustomDigit(Uint16 digit) {
 void FeedTableFactory::flashCustomDigit(Uint16 digit) {
   this->cursorTimer++;
 
-  if (this->cursorTimer == 0x20) {
+  if (this->cursorTimer == 0x10) {
     custom_feed.display[digit] = BLANK;
     custom_feed.display[1] |= POINT;
   }
 
-  if (this->cursorTimer == 0x30) {
+  if (this->cursorTimer == 0x20) {
     setCustomPitch(this->customPitch);
     this->cursorTimer = 0;
   }

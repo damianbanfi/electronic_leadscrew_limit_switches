@@ -45,6 +45,7 @@ private:
   Uint32 previous;
   Uint16 rpm;
   Uint32 spindleAngle;
+  Uint32 angleZeroPos;
 
 public:
   Encoder(void);
@@ -53,6 +54,8 @@ public:
   void reset(void);
 
   void setPosition(Uint32 newPos);
+
+  void setZeroAngle();
 
   Uint16 getRPM(void);
   Uint16 getSpindleAngle(void);

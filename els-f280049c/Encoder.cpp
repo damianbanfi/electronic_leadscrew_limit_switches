@@ -84,6 +84,10 @@ void Encoder::initHardware(void) {
   ENCODER_REGS.QEPCTL.bit.QCLM = 1;                       // Latch on unit time out
 
   ENCODER_REGS.QEPCTL.bit.QPEN = 1;                       // QEP enable
+  // Reset spindle angle
+  this->spindleAngle = 0;
+  // Reset initial angle
+  this->angleZeroPos = 300;
 }
 
 void Encoder::reset(void) {
@@ -91,9 +95,12 @@ void Encoder::reset(void) {
   ENCODER_REGS.QPOSINIT       = ENCODER_RESOLUTION;   // Initialize QPOSCNT at a high value to avoid
                                                       // problems with under/overflow
 
-  this->previous     = ENCODER_REGS.QPOSLAT;
-  this->rpm          = 0;
+  this->previous = ENCODER_REGS.QPOSLAT;
+  this->rpm      = 0;
+  // Reset spindle angle
   this->spindleAngle = 0;
+  // Reset initial angle
+  this->angleZeroPos = 0;
 }
 
 Uint16 Encoder::getRPM(void) {
@@ -116,8 +123,18 @@ Uint16 Encoder::getRPM(void) {
   return rpm;
 }
 
-Uint16 Encoder::getSpindleAngle(void) {
-  spindleAngle = (getPosition() % ENCODER_RESOLUTION * 3600) / ENCODER_RESOLUTION;
+void Encoder::setZeroAngle(void) {
+  // Capture current possition
+  angleZeroPos = getPosition();
+}
 
+Uint16 Encoder::getSpindleAngle(void) {
+  Uint32 currentPos = getPosition();
+  if (currentPos >= angleZeroPos) {
+    spindleAngle = ((currentPos - angleZeroPos) % ENCODER_RESOLUTION * 3600) / ENCODER_RESOLUTION;
+  } else {
+    spindleAngle = ((ENCODER_RESOLUTION + currentPos - angleZeroPos) % ENCODER_RESOLUTION * 3600)
+                 / ENCODER_RESOLUTION;
+  }
   return spindleAngle;
 }

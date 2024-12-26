@@ -75,7 +75,7 @@ public:
   void clearMessage(void);
   void mainLoop(Uint16 currentRpm);
   void menuLoop(Uint16 currentRpm);
-  void beginMenu(void);
+  void beginMenu(Uint16 currentRpm);
   void customThreadLoop(Uint16 currentRpm);
   void threadToShoulderLoop(Uint16 currentRpm);
   // Get the current state Thread -> 1, Feed -> 0

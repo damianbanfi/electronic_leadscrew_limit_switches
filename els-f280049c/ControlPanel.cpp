@@ -157,31 +157,39 @@ void ControlPanel::sendData() {
 }
 
 void ControlPanel::decomposeRPM() {
-  Uint16 rpm = this->rpm;
-  int i;
-
-  for (i = 3; i >= 0; i--) {
-    this->sevenSegmentData[i] = (rpm == 0 && i != 3) ? 0 : lcd_char(rpm % 10);
-    rpm                       = rpm / 10;
-  }
-
-  // add a 2 char prefix to show mode if rpm is zero
-  if (this->rpm == 0) {
+  // Check if we are in some edition mode
+  if ((this->curMode[0] != BLANK) && (this->curMode[1] != BLANK)) {
     this->sevenSegmentData[0] = this->curMode[0];
     this->sevenSegmentData[1] = this->curMode[1];
+    this->sevenSegmentData[2] = BLANK;
+    this->sevenSegmentData[3] = BLANK;
+  } else {
+    Uint16 rpm = this->rpm;
+    int i;
+    for (i = 3; i >= 0; i--) {
+      this->sevenSegmentData[i] = (rpm == 0 && i != 3) ? 0 : lcd_char(rpm % 10);
+      rpm                       = rpm / 10;
+    }
   }
 }
 
 void ControlPanel::decomposeSpindleAngle() {
-  Uint16 angle = this->spindleAngle;
-  int i;
-
-  for (i = 3; i >= 0; i--) {
-    if (i == 2)
-      this->sevenSegmentData[i] = lcd_char(angle % 10) | lcd_char(10);
-    else
-      this->sevenSegmentData[i] = (angle == 0 && i != 3) ? 0 : lcd_char(angle % 10);
-    angle = angle / 10;
+  // Check if we are in some edition mode
+  if ((this->curMode[0] != BLANK) && (this->curMode[1] != BLANK)) {
+    this->sevenSegmentData[0] = this->curMode[0];
+    this->sevenSegmentData[1] = this->curMode[1];
+    this->sevenSegmentData[2] = BLANK;
+    this->sevenSegmentData[3] = BLANK;
+  } else {
+    Uint16 angle = this->spindleAngle;
+    int i;
+    for (i = 3; i >= 0; i--) {
+      if (i == 2)
+        this->sevenSegmentData[i] = lcd_char(angle % 10) | lcd_char(10);
+      else
+        this->sevenSegmentData[i] = (angle == 0 && i != 3) ? 0 : lcd_char(angle % 10);
+      angle = angle / 10;
+    }
   }
 }
 

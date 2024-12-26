@@ -26,7 +26,7 @@
 #include "UserInterface.h"
 
 const MESSAGE STARTUP_MESSAGE_2
-    = {.message     = {LETTER_E, LETTER_L, LETTER_S, DASH, ONE | POINT, SIX | POINT, ZERO, ZERO},
+    = {.message     = {LETTER_E, LETTER_L, LETTER_S, DASH, ONE | POINT, SIX, BLANK, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 1.5};
 
 const MESSAGE STARTUP_MESSAGE_1
@@ -70,6 +70,14 @@ const MESSAGE POSITION
     = {.message = {LETTER_P, LETTER_O, LETTER_S, LETTER_I, LETTER_T, LETTER_I, LETTER_O, LETTER_N},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
+const MESSAGE RPM
+    = {.message     = {LETTER_R, LETTER_P, LETTER_M1, LETTER_M2, BLANK, BLANK, BLANK, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+
+const MESSAGE RESET_POS
+    = {.message     = {LETTER_R, LETTER_S, LETTER_T, BLANK, LETTER_P, LETTER_O, LETTER_S, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+
 extern const MESSAGE LIMIT_SW_2;
 const MESSAGE LIMIT_SW
     = {.message     = {LETTER_L, LETTER_I, LETTER_M1, LETTER_M2, LETTER_I, LETTER_T, BLANK, BLANK},
@@ -79,10 +87,6 @@ const MESSAGE LIMIT_SW
 const MESSAGE LIMIT_SW_2 = {.message     = {BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK},
                             .displayTime = UI_REFRESH_RATE_HZ * 0.1,
                             .next        = &LIMIT_SW};
-
-const MESSAGE RPM
-    = {.message     = {LETTER_R, LETTER_P, LETTER_M1, LETTER_M2, BLANK, BLANK, BLANK, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 extern const MESSAGE BACKLOG_PANIC_MESSAGE_2;
 const MESSAGE BACKLOG_PANIC_MESSAGE_1
@@ -242,7 +246,7 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
         core->setReverse(this->reverse);
       }
       if (keys.bit.SET) {
-        beginMenu();
+        beginMenu(currentRpm);
       }
     }
   }
@@ -315,22 +319,28 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
   }
 }
 
+// 'set' menu states, note spacing to allow for 'sub-states'.
+enum menuStates {
+  kResetPos         = 0,
+  kCustomThread     = 0x10,
+  kThreadToShoulder = 0x20,
+  kShowPosition     = 0x30,
+  kQuitMenu         = 0x100
+};
+
 // menu loop code
 
-void UserInterface::beginMenu() {
-  this->isInMenu     = true;
-  this->menuState    = 0;
+void UserInterface::beginMenu(Uint16 currentRpm) {
+  this->isInMenu = true;
+  // Reset position menu is only available when is stopped and it's showing the angle
+  if ((currentRpm == 0) && (this->showAngle))
+    this->menuState = kResetPos;
+  // If not start with the custom thread
+  else
+    this->menuState = kCustomThread;
   this->menuSubState = 0;
   this->numStarts    = 1;
 }
-
-// 'set' menu states, note spacing to allow for 'sub-states'.
-enum menuStates {
-  kCustomThread     = 0,
-  kThreadToShoulder = 0x10,
-  kShowPosition     = 0x20,
-  kQuitMenu         = 0x100
-};
 
 void UserInterface::cycleOptions(Uint16 next, Uint16 prev) {
   // if set then start loop
@@ -355,22 +365,46 @@ void UserInterface::cycleOptions(Uint16 next, Uint16 prev) {
 }
 
 void UserInterface::menuLoop(Uint16 currentRpm) {
+  // check for exit from custom thread
+  if (keys.bit.POWER) {
+    this->menuState = kQuitMenu;
+  }
+
   switch (this->menuState) {
-      // custom threads
+    // Reset position
+    case kResetPos:   // init
+      setMessage(&RESET_POS);
+      this->menuState++;
+      break;
+    case kResetPos + 1:
+      // wait for keypress, either select this option, move to new or timeout
+      cycleOptions(kShowPosition, kCustomThread);   // link any other menu options here
+      break;
+    case kResetPos + 2:                             // run loop
+      // Reset Zero angle
+      encoder->setZeroAngle();
+      clearMessage();
+      this->menuState = kQuitMenu;
+      break;
+
+    // custom threads
     case kCustomThread:   // init
       setMessage(&CUSTOM_THREAD);
       this->menuState++;
       break;
     case kCustomThread + 1:
       // wait for keypress, either select this option, move to new or timeout
-      cycleOptions(kShowPosition, kThreadToShoulder);   // link any other menu options here
+      if ((currentRpm == 0) && (this->showAngle))
+        cycleOptions(kResetPos, kThreadToShoulder);       // link any other menu options here
+      else
+        cycleOptions(kShowPosition, kThreadToShoulder);   // link any other menu options here
       break;
-    case kCustomThread + 2:                             // run loop
-      controlPanel->showCurMode(LETTER_C, LETTER_T);
+    case kCustomThread + 2:                               // run loop
+      controlPanel->showCurMode(LETTER_C, POINT | LETTER_T);
       customThreadLoop(currentRpm);
       break;
 
-      // Thread to shoulder
+    // Thread to shoulder
     case kThreadToShoulder:   // init
       setMessage(&THREAD_TO_SHOULDER);
       this->menuState++;
@@ -380,27 +414,29 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       cycleOptions(kCustomThread, kShowPosition);   // link any other menu options here
       break;
     case kThreadToShoulder + 2:                     // run loop
-      controlPanel->showCurMode(LETTER_S, LETTER_H);
       threadToShoulderLoop(currentRpm);
       break;
 
-      // Spindle position / RPM
+    // Spindle position / RPM
     case kShowPosition:   // init
       setMessage(showAngle ? &RPM : &POSITION);
       this->menuState++;
       break;
-    case kShowPosition
-        + 1:   // wait for keypress, either select this option, move to new or timeout
-      cycleOptions(kThreadToShoulder, kCustomThread);   // link any other menu options here
+    case kShowPosition + 1:
+      // wait for keypress, either select this option, move to new or timeout
+      if ((currentRpm == 0) && (this->showAngle))
+        cycleOptions(kThreadToShoulder, kResetPos);       // link any other menu options here
+      else
+        cycleOptions(kThreadToShoulder, kCustomThread);   // link any other menu options here
       break;
-    case kShowPosition + 2:                             // run loop
-      showAngle = !showAngle;
-      clearMessage();
+    case kShowPosition + 2:                               // run loop
+      showAngle       = !showAngle;
       this->menuState = kQuitMenu;
       break;
 
     // exit setup
     case kQuitMenu:
+      clearMessage();
       this->isInMenu = false;
       break;
   }
@@ -459,6 +495,7 @@ void UserInterface::customThreadLoop(Uint16 currentRpm) {
       break;
 
     case 4:
+      controlPanel->showCurMode(BLANK, BLANK);
       feedTableFactory->flashCustomOff();
       core->setFeed(loadFeedTable());
 
@@ -479,6 +516,10 @@ void UserInterface::threadToShoulderLoop(Uint16 currentRpm) {
         this->numStarts++;
       if (keys.bit.DOWN && this->numStarts > 1)
         this->numStarts--;
+      if (keys.bit.UP && this->numStarts == 9)
+        this->numStarts = 1;
+      if (keys.bit.DOWN && this->numStarts == 1)
+        this->numStarts = 9;
 
       MULTI.message[7] = this->feedTableFactory->valueToDigit(this->numStarts);
       setMessage(&MULTI);

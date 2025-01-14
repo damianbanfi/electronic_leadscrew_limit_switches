@@ -163,7 +163,7 @@ inline void StepperDrive::incrementCurrentPosition(int32 increment) {
 inline bool StepperDrive::checkStepBacklog() {
   // holding and retracting are special cases where the backlog can exceed limits (this shouldn't
   // matter since the motor is either stopped or moving at a safe value).
-  if (!(holdAtShoulder || movingToStart)) {
+  if (!(holdAtShoulder || movingToStart || limitSwitchInt)) {
     if (abs(this->desiredPosition - this->currentPosition) > MAX_BUFFERED_STEPS) {
       setEnabled(false);
       return true;
@@ -245,7 +245,7 @@ inline void StepperDrive::moveToStart(int32 stepsPerUnitPitch) {
 
   this->incrementCurrentPosition(diff);
 
-  moveToStartSpeed = retractSpeed * 5;   // start at 1/5th max speed
+  moveToStartSpeed = retractSpeed * 10;   // start at 1/5th max speed
   movingToStart    = true;
 }
 
@@ -351,7 +351,7 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
             if ((rpm == 0) || (spindleDirection != this->prevSpindleDir)) {
               // Close the gap between the desired steps count and the current position
               this->resetToShoulder();
-              prevDiffSignPositive = (diff < 0) ? true : false;
+              prevDiffSignPositive = (diff > 0) ? true : false;
               // go to next state
               this->limitSwState = 3;
             }
@@ -362,12 +362,27 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
             // the difference is 0 or a change in the diff sign
             if ((diff == 0) || (diff < 0 && prevDiffSignPositive)
                 || (diff > 0 && !prevDiffSignPositive)) {
-              // Reset the limit switch operation
-              this->limitSwitchInt = false;
-              this->limitSwState   = 0;
+              // if (labs(diff) < 10) {
+              //  Save current spindle direction
+              this->prevSpindleDir = spindleDirection;
+              // Go to wait until the next direction invertion
+              this->limitSwState = 4;
               // Allow the movement again
               return false;
             }
+            break;
+
+          case 4:
+            // Wait until the spindle is stoped
+            // Or detect if there si a change in the spindle direction
+            if (spindleDirection != this->prevSpindleDir) {
+              // Reset the limit switch operation
+              this->limitSwitchInt = false;
+              this->limitSwState   = 0;
+            }
+            // Allow the movement again
+            return false;
+            break;
         }
         // disable movement
         return true;
@@ -382,9 +397,9 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
             this->limitSwState = 1;
             break;
           case 1:
+            // resinchronize the position while it's stoped
+            this->currentPosition = this->desiredPosition;
             if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
-              // resinchronize the position
-              this->currentPosition = this->desiredPosition;
               // Clear the limit switch operation
               this->limitSwitchInt = false;
               this->limitSwState   = 0;

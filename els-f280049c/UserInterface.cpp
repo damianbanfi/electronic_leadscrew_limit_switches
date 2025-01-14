@@ -27,56 +27,56 @@
 
 const MESSAGE STARTUP_MESSAGE_2
     = {.message     = {LETTER_E, LETTER_L, LETTER_S, DASH, ONE | POINT, SIX, BLANK, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 1.5};
+       .displayTime = UI_REFRESH_RATE_HZ * 0.5};
 
 const MESSAGE STARTUP_MESSAGE_1
     = {.message     = {LETTER_P, LETTER_A, LETTER_B, LETTER_L, LETTER_O, DASH, TWO, FIVE},
-       .displayTime = UI_REFRESH_RATE_HZ * 1.5,
+       .displayTime = UI_REFRESH_RATE_HZ * 0.5,
        .next        = &STARTUP_MESSAGE_2};
 
-const MESSAGE CUSTOM_THREAD
-    = {.message     = {LETTER_C, LETTER_U, LETTER_S, LETTER_T, BLANK, LETTER_T, LETTER_H, LETTER_D},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+const MESSAGE CUSTOM_THREAD = {.message = {LETTER_R, LETTER_O, LETTER_S, LETTER_C | POINT, BLANK,
+                                           LETTER_E, LETTER_S, LETTER_P | POINT},
+                               .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
-const MESSAGE THREAD_TO_SHOULDER
-    = {.message = {LETTER_S, LETTER_H, LETTER_O, LETTER_U, LETTER_L, LETTER_D, LETTER_E, LETTER_R},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+const MESSAGE THREAD_TO_SHOULDER = {.message     = {LETTER_R, LETTER_O, LETTER_S, LETTER_C | POINT,
+                                                    LETTER_A, LETTER_U, LETTER_T, LETTER_O},
+                                    .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE STOP
     = {.message     = {LETTER_S, LETTER_T, LETTER_O, LETTER_P, BLANK, BLANK, BLANK, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+       .displayTime = UI_REFRESH_RATE_HZ * 1000.0};
 
 const MESSAGE WAIT
-    = {.message     = {LETTER_W1, LETTER_W2, LETTER_A, LETTER_I, LETTER_T, BLANK, BLANK, BLANK},
+    = {.message     = {LETTER_E, LETTER_S, LETTER_P, LETTER_E, LETTER_R, LETTER_A, LETTER_R, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 1.0};
 
 const MESSAGE GO_SHOULDER
-    = {.message     = {LETTER_G, LETTER_O, BLANK, LETTER_S, LETTER_H, LETTER_L, LETTER_D, LETTER_R},
+    = {.message     = {BLANK, LETTER_G, LETTER_O, BLANK, BLANK, LETTER_F, LETTER_I, LETTER_N},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE GO_START
-    = {.message     = {LETTER_G, LETTER_O, BLANK, LETTER_S, LETTER_T, LETTER_A, LETTER_R, LETTER_T},
+    = {.message     = {BLANK, LETTER_G, LETTER_O, BLANK, BLANK, LETTER_I, LETTER_N, LETTER_I},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE RETRACT
-    = {.message     = {LETTER_R, LETTER_E, LETTER_T, LETTER_R, LETTER_A, LETTER_C, LETTER_T, BLANK},
+    = {.message     = {LETTER_R, LETTER_E, LETTER_T, LETTER_R, LETTER_A, LETTER_E, LETTER_R, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE REVERSE
-    = {.message     = {LETTER_R, LETTER_E, LETTER_V, LETTER_E, LETTER_R, LETTER_S, LETTER_E, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+    = {.message     = {LETTER_R, LETTER_E, LETTER_U, LETTER_E, LETTER_R, LETTER_S, LETTER_E, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 1000.0};
 
-const MESSAGE POSITION
-    = {.message = {LETTER_P, LETTER_O, LETTER_S, LETTER_I, LETTER_T, LETTER_I, LETTER_O, LETTER_N},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+const MESSAGE POSITION = {.message     = {LETTER_P, LETTER_O, LETTER_S | POINT, BLANK, LETTER_G,
+                                          LETTER_R, LETTER_A, LETTER_D},
+                          .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 const MESSAGE RPM
     = {.message     = {LETTER_R, LETTER_P, LETTER_M1, LETTER_M2, BLANK, BLANK, BLANK, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
-const MESSAGE RESET_POS
-    = {.message     = {LETTER_R, LETTER_S, LETTER_T, BLANK, LETTER_P, LETTER_O, LETTER_S, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 2.0};
+const MESSAGE RESET_POS = {.message     = {LETTER_R, LETTER_S, LETTER_T | POINT, BLANK, LETTER_P,
+                                           LETTER_O, LETTER_S | POINT, BLANK},
+                           .displayTime = UI_REFRESH_RATE_HZ * 2.0};
 
 extern const MESSAGE LIMIT_SW_2;
 const MESSAGE LIMIT_SW
@@ -103,8 +103,9 @@ MESSAGE MULTI
     = {.message     = {LETTER_M1, LETTER_M2, LETTER_U, LETTER_L, LETTER_T, LETTER_I, BLANK, BLANK},
        .displayTime = UI_REFRESH_RATE_HZ * 0.2};
 
-MESSAGE BEGIN = {.message = {LETTER_B, LETTER_E, LETTER_G, LETTER_I, LETTER_N, BLANK, BLANK, BLANK},
-                 .displayTime = UI_REFRESH_RATE_HZ * 0.2};
+MESSAGE BEGIN
+    = {.message     = {LETTER_E, LETTER_N, LETTER_T, LETTER_R | POINT, BLANK, BLANK, BLANK, BLANK},
+       .displayTime = UI_REFRESH_RATE_HZ * 0.2};
 
 const Uint16 VALUE_BLANK[4] = {BLANK, BLANK, BLANK, BLANK};
 
@@ -288,7 +289,7 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
         // or reversed, so print the Stop message, and when is stoped reverse message
         switch (limitSwState) {
           case 1:
-            // Limit Switch Reached, print Stop messaje for Stopt the Spindle
+            // Limit Switch Reached, print Stop messaje for Stop the Spindle
             setMessage(&LIMIT_SW);
             break;
           case 2:
@@ -297,6 +298,11 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
             break;
 
           case 3:
+            // Set mensage to indicate reverse
+            setMessage(&REVERSE);
+            break;
+
+          case 4:
             // Set mensage to indicate reverse
             setMessage(&REVERSE);
             break;
@@ -360,13 +366,20 @@ void UserInterface::cycleOptions(Uint16 next, Uint16 prev) {
   }
 
   // if timeout then end menu
-  else if (this->messageTime == 0)
+  else if (this->messageTime == 0 && !limitSwState)
     this->menuState = kQuitMenu;
 }
 
 void UserInterface::menuLoop(Uint16 currentRpm) {
   // check for exit from custom thread
   if (keys.bit.POWER) {
+    // Reset everything just in case
+    controlPanel->showCurMode(BLANK, BLANK);
+    feedTableFactory->flashCustomOff();
+    core->setFeed(loadFeedTable());
+    clearMessage();
+    core->beginThreadToShoulder(false);
+    this->isInMenu  = false;
     this->menuState = kQuitMenu;
   }
 
@@ -400,7 +413,7 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
         cycleOptions(kShowPosition, kThreadToShoulder);   // link any other menu options here
       break;
     case kCustomThread + 2:                               // run loop
-      controlPanel->showCurMode(LETTER_C, POINT | LETTER_T);
+      controlPanel->showCurMode(LETTER_R | POINT, LETTER_E | POINT);
       customThreadLoop(currentRpm);
       break;
 
@@ -411,6 +424,9 @@ void UserInterface::menuLoop(Uint16 currentRpm) {
       break;
     case kThreadToShoulder + 1:
       // wait for keypress, either select this option, move to new or timeout
+      this->thread = true;
+      core->setFeed(loadFeedTable());
+      core->setThread(this->thread);
       cycleOptions(kCustomThread, kShowPosition);   // link any other menu options here
       break;
     case kThreadToShoulder + 2:                     // run loop
@@ -514,11 +530,11 @@ void UserInterface::threadToShoulderLoop(Uint16 currentRpm) {
     case 0:
       if (keys.bit.UP && this->numStarts < 9)
         this->numStarts++;
-      if (keys.bit.DOWN && this->numStarts > 1)
+      else if (keys.bit.DOWN && this->numStarts > 1)
         this->numStarts--;
-      if (keys.bit.UP && this->numStarts == 9)
+      else if (keys.bit.UP && this->numStarts == 9)
         this->numStarts = 1;
-      if (keys.bit.DOWN && this->numStarts == 1)
+      else if (keys.bit.DOWN && this->numStarts == 1)
         this->numStarts = 9;
 
       MULTI.message[7] = this->feedTableFactory->valueToDigit(this->numStarts);

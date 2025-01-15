@@ -143,7 +143,7 @@ public:
   }
   bool isAtShoulder(void);
   bool isAtStart(void);
-  void resetToShoulder(void);
+  int32 resetToShoulder(void);
   int32 getDistanceToShoulder(void) { return desiredPosition - shoulderPosition; }
 
   void setDesiredPosition(int32 steps) { this->desiredPosition = steps; }
@@ -221,7 +221,7 @@ inline void StepperDrive::beginThreadToShoulder(bool start) {
 
 // we have a desired position that's behind the shoulder, calculate a currentPosition that moves us
 // within 1 thread of the shoulder whilst still maintaining the angular relationship
-inline void StepperDrive::resetToShoulder(void) {
+inline int32 StepperDrive::resetToShoulder(void) {
   // total steps we've overshot by
   float diff = this->desiredPosition - this->currentPosition;
 
@@ -231,6 +231,7 @@ inline void StepperDrive::resetToShoulder(void) {
   ival       = ival * this->stepsPerUnitPitch;
 
   this->incrementCurrentPosition(ival);
+  return int32(diff);
 }
 
 inline void StepperDrive::setStartOffset(int32 startOffset) {
@@ -321,11 +322,15 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
 
         // in any case, if the limit switch is removed (i.e. manual operation), then FSM is reset
         if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
-          // Clear the limit switch operation
-          this->limitSwitchInt = false;
-          this->limitSwState   = 0;
-          // Allow the movement again
-          return false;
+          // Close the gap between the desired steps count and the current position
+          if (this->resetToShoulder() < 10) {
+            // Clear the limit switch operation
+            this->limitSwitchInt = false;
+            this->limitSwState   = 0;
+            // Allow the movement again
+            return false;
+          }
+          return true;
         }
 
         // In Thread mode the movement is stopped and it waits until the spindle it's also stopped

@@ -44,7 +44,7 @@ const MESSAGE THREAD_TO_SHOULDER = {.message     = {LETTER_R, LETTER_O, LETTER_S
 
 const MESSAGE STOP
     = {.message     = {LETTER_S, LETTER_T, LETTER_O, LETTER_P, BLANK, BLANK, BLANK, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 1000.0};
+       .displayTime = UI_REFRESH_RATE_HZ * 100.0};
 
 const MESSAGE WAIT
     = {.message     = {LETTER_E, LETTER_S, LETTER_P, LETTER_E, LETTER_R, LETTER_A, LETTER_R, BLANK},
@@ -64,7 +64,7 @@ const MESSAGE RETRACT
 
 const MESSAGE REVERSE
     = {.message     = {LETTER_R, LETTER_E, LETTER_U, LETTER_E, LETTER_R, LETTER_S, LETTER_E, BLANK},
-       .displayTime = UI_REFRESH_RATE_HZ * 1000.0};
+       .displayTime = UI_REFRESH_RATE_HZ * 100.0};
 
 const MESSAGE POSITION = {.message     = {LETTER_P, LETTER_O, LETTER_S | POINT, BLANK, LETTER_G,
                                           LETTER_R, LETTER_A, LETTER_D},
@@ -288,6 +288,9 @@ void UserInterface::mainLoop(Uint16 currentRpm) {
         // In Thread mode the movement is stopped and it waits until the spindle it's also stopped
         // or reversed, so print the Stop message, and when is stoped reverse message
         switch (limitSwState) {
+          case 0:
+            // Clear msg
+            clearMessage();
           case 1:
             // Limit Switch Reached, print Stop messaje for Stop the Spindle
             setMessage(&LIMIT_SW);

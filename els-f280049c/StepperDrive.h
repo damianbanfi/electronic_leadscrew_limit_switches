@@ -135,7 +135,12 @@ public:
   void setShoulder(void) { this->shoulderPosition = currentPosition; }
   void setStart(void) { this->startPosition = this->currentPosition; }
   void setStartOffset(int32 startOffset);
-  void setThread(bool thread) { this->thread = thread; }
+  void setThread(bool thread) {
+    this->thread = thread;
+    if (thread == false) {
+      this->limitSwState = 0;
+    }
+  }
   bool isAtShoulder(void);
   bool isAtStart(void);
   void resetToShoulder(void);
@@ -313,6 +318,16 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
       // Check the current Status between Thread or Feed mode, the behavior
       // of the limit switch is sligthly different
       if (this->thread) {
+
+        // in any case, if the limit switch is removed (i.e. manual operation), then FSM is reset
+        if (GPIO_ReadPin(LIMIT_SW_GPIO) == 1) {
+          // Clear the limit switch operation
+          this->limitSwitchInt = false;
+          this->limitSwState   = 0;
+          // Allow the movement again
+          return false;
+        }
+
         // In Thread mode the movement is stopped and it waits until the spindle it's also stopped
         // or reversed, then substract and integer number of spindle evolutions to close the gap.
         // Finally waits until the diff is 0 or changed the sign to finish the limit siwtch
@@ -347,49 +362,54 @@ inline bool StepperDrive::limitSwitchISR(int32 diff, Uint16 rpm, bool spindleDir
 
           case 2:
             // Wait until the spindle is stoped
+            if (rpm == 0) {
+              this->prevSpindleDir = spindleDirection;
+              // go to wait reverse
+              this->limitSwState = 3;
+            }
             // Or detect if there si a change in the spindle direction
-            if ((rpm == 0) || (spindleDirection != this->prevSpindleDir)) {
+            else if (spindleDirection != this->prevSpindleDir) {
               // Close the gap between the desired steps count and the current position
               this->resetToShoulder();
               prevDiffSignPositive = (diff > 0) ? true : false;
               // go to next state
-              this->limitSwState = 3;
+              this->limitSwState = 4;
             }
             break;
 
           case 3:
-            // Spindle is stoped or in the oposite direction, so wait until
+            // Wait until detect a change in the spindle direction
+            if (spindleDirection != this->prevSpindleDir) {
+              // Close the gap between the desired steps count and the current position
+              this->resetToShoulder();
+              prevDiffSignPositive = (diff > 0) ? true : false;
+              // go to next state
+              this->limitSwState = 4;
+            }
+            break;
+
+          case 4:
+            // Spindle is in the oposite direction, so wait until
             // the difference is 0 or a change in the diff sign
             if ((diff == 0) || (diff < 0 && prevDiffSignPositive)
                 || (diff > 0 && !prevDiffSignPositive)) {
               // if (labs(diff) < 10) {
               //  Save current spindle direction
               this->prevSpindleDir = spindleDirection;
-              // Go to wait until the next direction invertion
-              this->limitSwState = 4;
-              // Allow the movement again
-              return false;
-            }
-            break;
-
-          case 4:
-            // Wait until the spindle is stoped
-            // Or detect if there si a change in the spindle direction
-            if (spindleDirection != this->prevSpindleDir) {
               // Reset the limit switch operation
               this->limitSwitchInt = false;
               this->limitSwState   = 0;
+              // Allow the movement again
+              return false;
             }
-            // Allow the movement again
-            return false;
             break;
         }
         // disable movement
         return true;
       }
       // In Feed mode the Limit Switch stops the movement and only waits until the input is
-      // released, that mean the limit switch unlocked. Thre is no need of synchronization with the
-      // spindle because is not a Thread.
+      // released, that mean the limit switch unlocked. Thre is no need of synchronization with
+      // the spindle because is not a Thread.
       else {
         switch (this->limitSwState) {
           case 0:

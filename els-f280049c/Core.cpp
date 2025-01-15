@@ -33,9 +33,10 @@ Core::Core(Encoder *encoder, StepperDrive *stepperDrive) {
   this->feed          = NULL;
   this->feedDirection = 0;
 
-  this->previousSpindlePosition = 0;
-  this->previousFeedDirection   = 0;
-  this->previousFeed            = NULL;
+  this->previousSpindlePosition  = 0;
+  this->previousSpindlePosition2 = 0;
+  this->previousFeedDirection    = 0;
+  this->previousFeed             = NULL;
 
   setPowerOn(START_POWER_ON);   // initial power on state
 }

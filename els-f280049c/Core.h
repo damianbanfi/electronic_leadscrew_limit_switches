@@ -51,6 +51,7 @@ private:
   int16 previousFeedDirection;
 
   Uint32 previousSpindlePosition;
+  Uint32 previousSpindlePosition2;
 
   int32 feedRatio(Uint32 count);
 
@@ -133,10 +134,12 @@ inline void Core::ISR(void) {
     if (spindlePosition < previousSpindlePosition
         && previousSpindlePosition - spindlePosition > encoder->getMaxCount() / 2) {
       stepperDrive->incrementCurrentPosition(-1 * feedRatio(encoder->getMaxCount()));
+      this->previousSpindlePosition2 = spindlePosition;
     }
     if (spindlePosition > previousSpindlePosition
         && spindlePosition - previousSpindlePosition > encoder->getMaxCount() / 2) {
       stepperDrive->incrementCurrentPosition(feedRatio(encoder->getMaxCount()));
+      this->previousSpindlePosition2 = spindlePosition;
     }
 
     // if the feed or direction changed, reset sync to avoid a big step
@@ -148,12 +151,17 @@ inline void Core::ISR(void) {
     // - spindlePosition >  previousSpindlePosition : Forward direction -> 0
     // - spindlePosition <  previousSpindlePosition : Reverse direction -> 1
     // - spindlePosition == previousSpindlePosition : No change
-    if (spindlePosition > previousSpindlePosition)
-      // Forward
-      this->spindleDirection = 0;
-    else if (spindlePosition < previousSpindlePosition)
-      // Reverse
-      this->spindleDirection = 1;
+    if (spindlePosition > (previousSpindlePosition2 + 10)) {
+      previousSpindlePosition2 = spindlePosition;
+      if (!(spindlePosition - previousSpindlePosition > encoder->getMaxCount() / 2))
+        // Forward
+        this->spindleDirection = 0;
+    } else if ((spindlePosition + 10) < previousSpindlePosition2) {
+      previousSpindlePosition2 = spindlePosition;
+      if (!(previousSpindlePosition - spindlePosition > encoder->getMaxCount() / 2))
+        // Reverse
+        this->spindleDirection = 1;
+    }
 
     // remember values for next time
     previousSpindlePosition = spindlePosition;
